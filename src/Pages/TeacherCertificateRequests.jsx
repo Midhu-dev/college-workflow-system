@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import Navbar from "../components/Navbar";
+import Sidebar from "../components/Sidebar";
 import Footer from "../components/Footer";
 import PageHeader from "../components/PageHeader";
 import StatusBadge from "../components/StatusBadge";
@@ -35,13 +35,17 @@ function TeacherCertificateRequests() {
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.message || "Failed to fetch certificate requests");
+        throw new Error(
+          data.message || "Failed to fetch certificate requests"
+        );
       }
 
       setRequests(data.requests || []);
     } catch (error) {
       console.error("Certificate requests error:", error);
-      setMessage(error.message || "Failed to load certificate requests.");
+      setMessage(
+        error.message || "Failed to load certificate requests."
+      );
     } finally {
       setLoading(false);
     }
@@ -73,7 +77,9 @@ function TeacherCertificateRequests() {
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.message || "Failed to update certificate request");
+        throw new Error(
+          data.message || "Failed to update certificate request"
+        );
       }
 
       setMessage(
@@ -93,9 +99,7 @@ function TeacherCertificateRequests() {
   };
 
   return (
-    <div className="min-h-screen bg-[#050505] text-white flex flex-col">
-      <Navbar role="teacher" />
-
+    <Sidebar role="teacher">
       <main className="max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-8 sm:py-10 flex-1">
         
         <PageHeader
@@ -118,7 +122,9 @@ function TeacherCertificateRequests() {
         )}
 
         {/* LOADING */}
-        {loading && <LoadingState message="Fetching pending certificate requests..." />}
+        {loading && (
+          <LoadingState message="Fetching pending certificate requests..." />
+        )}
 
         {/* EMPTY STATE */}
         {!loading && requests.length === 0 && (
@@ -145,7 +151,10 @@ function TeacherCertificateRequests() {
                       <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded bg-[#17130A] border border-[#3D3318] text-[#D4AF37]">
                         Requisition
                       </span>
-                      <StatusBadge status={request.status || "PENDING"} />
+
+                      <StatusBadge
+                        status={request.status || "PENDING"}
+                      />
                     </div>
 
                     <h2 className="text-lg font-bold text-white tracking-tight">
@@ -154,33 +163,47 @@ function TeacherCertificateRequests() {
 
                     {/* METADATA GRID */}
                     <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 mt-3 text-xs">
+                      
                       <div className="bg-[#080808] p-2.5 rounded-lg border border-[#1F1F1F]">
-                        <span className="text-[10px] text-[#888888] uppercase block">Student</span>
+                        <span className="text-[10px] text-[#888888] uppercase block">
+                          Student
+                        </span>
+
                         <span className="font-semibold text-white truncate block">
                           {request.student_name || "N/A"}
                         </span>
                       </div>
 
                       <div className="bg-[#080808] p-2.5 rounded-lg border border-[#1F1F1F]">
-                        <span className="text-[10px] text-[#888888] uppercase block">Register No</span>
+                        <span className="text-[10px] text-[#888888] uppercase block">
+                          Register No
+                        </span>
+
                         <span className="font-mono text-white truncate block">
                           {request.student_user_id || "N/A"}
                         </span>
                       </div>
 
                       <div className="bg-[#080808] p-2.5 rounded-lg border border-[#1F1F1F]">
-                        <span className="text-[10px] text-[#888888] uppercase block">Department</span>
+                        <span className="text-[10px] text-[#888888] uppercase block">
+                          Department
+                        </span>
+
                         <span className="text-white truncate block">
                           {request.department || "General"}
                         </span>
                       </div>
 
                       <div className="bg-[#080808] p-2.5 rounded-lg border border-[#1F1F1F]">
-                        <span className="text-[10px] text-[#888888] uppercase block">Purpose</span>
+                        <span className="text-[10px] text-[#888888] uppercase block">
+                          Purpose
+                        </span>
+
                         <span className="text-[#D4AF37] font-semibold truncate block">
                           {request.purpose || "General"}
                         </span>
                       </div>
+
                     </div>
 
                     {request.additional_details && (
@@ -188,6 +211,7 @@ function TeacherCertificateRequests() {
                         <p className="text-[10px] font-semibold text-[#777777] uppercase tracking-wider mb-1">
                           Applicant Remarks
                         </p>
+
                         <p className="text-xs text-[#CCCCCC] leading-relaxed whitespace-pre-wrap">
                           {request.additional_details}
                         </p>
@@ -195,7 +219,12 @@ function TeacherCertificateRequests() {
                     )}
 
                     <p className="text-[10px] text-[#666666] mt-2 font-mono">
-                      Requested on: {request.created_at ? new Date(request.created_at).toLocaleDateString() : "-"}
+                      Requested on:{" "}
+                      {request.created_at
+                        ? new Date(
+                            request.created_at
+                          ).toLocaleDateString()
+                        : "-"}
                     </p>
                   </div>
 
@@ -227,10 +256,12 @@ function TeacherCertificateRequests() {
               <div>
                 <div className="flex items-center gap-2 mb-1">
                   <span className="w-2 h-2 rounded-full bg-[#D4AF37]" />
+
                   <span className="text-[11px] tracking-wider text-[#D4AF37] font-semibold uppercase">
                     Certificate Requisition
                   </span>
                 </div>
+
                 <h2 className="text-lg font-bold text-white tracking-tight">
                   {selectedRequest.certificate_type}
                 </h2>
@@ -249,24 +280,53 @@ function TeacherCertificateRequests() {
             {/* DETAILS LIST */}
             <div className="space-y-3 text-xs bg-[#080808] border border-[#222222] rounded-xl p-4">
               <div className="flex justify-between">
-                <span className="text-[#888888]">Student Name</span>
-                <span className="font-semibold text-white">{selectedRequest.student_name}</span>
+                <span className="text-[#888888]">
+                  Student Name
+                </span>
+
+                <span className="font-semibold text-white">
+                  {selectedRequest.student_name}
+                </span>
               </div>
+
               <div className="flex justify-between">
-                <span className="text-[#888888]">Student ID</span>
-                <span className="font-mono text-white">{selectedRequest.student_user_id}</span>
+                <span className="text-[#888888]">
+                  Student ID
+                </span>
+
+                <span className="font-mono text-white">
+                  {selectedRequest.student_user_id}
+                </span>
               </div>
+
               <div className="flex justify-between">
-                <span className="text-[#888888]">Department</span>
-                <span className="text-white">{selectedRequest.department || "—"}</span>
+                <span className="text-[#888888]">
+                  Department
+                </span>
+
+                <span className="text-white">
+                  {selectedRequest.department || "—"}
+                </span>
               </div>
+
               <div className="flex justify-between">
-                <span className="text-[#888888]">Certificate Type</span>
-                <span className="font-semibold text-white">{selectedRequest.certificate_type}</span>
+                <span className="text-[#888888]">
+                  Certificate Type
+                </span>
+
+                <span className="font-semibold text-white">
+                  {selectedRequest.certificate_type}
+                </span>
               </div>
+
               <div className="flex justify-between">
-                <span className="text-[#888888]">Application Purpose</span>
-                <span className="text-[#D4AF37] font-semibold">{selectedRequest.purpose}</span>
+                <span className="text-[#888888]">
+                  Application Purpose
+                </span>
+
+                <span className="text-[#D4AF37] font-semibold">
+                  {selectedRequest.purpose}
+                </span>
               </div>
             </div>
 
@@ -275,6 +335,7 @@ function TeacherCertificateRequests() {
                 <span className="text-[10px] text-[#888888] uppercase tracking-wider block mb-1">
                   Additional Notes
                 </span>
+
                 <p className="text-[#CCCCCC] leading-relaxed">
                   {selectedRequest.additional_details}
                 </p>
@@ -295,7 +356,12 @@ function TeacherCertificateRequests() {
               <button
                 type="button"
                 disabled={updating}
-                onClick={() => updateRequestStatus(selectedRequest.id, "REJECTED")}
+                onClick={() =>
+                  updateRequestStatus(
+                    selectedRequest.id,
+                    "REJECTED"
+                  )
+                }
                 className="px-4 py-2.5 rounded-xl bg-[#1C0D0D] border border-[#3D1B1B] hover:bg-[#2B1313] hover:border-[#5A2525] text-xs font-bold text-[#F87171] transition"
               >
                 {updating ? "Processing..." : "✕ Reject"}
@@ -304,10 +370,17 @@ function TeacherCertificateRequests() {
               <button
                 type="button"
                 disabled={updating}
-                onClick={() => updateRequestStatus(selectedRequest.id, "COMPLETED")}
+                onClick={() =>
+                  updateRequestStatus(
+                    selectedRequest.id,
+                    "COMPLETED"
+                  )
+                }
                 className="px-4 py-2.5 rounded-xl bg-[#D4AF37] hover:bg-[#E5C158] text-[#050505] text-xs font-bold transition shadow-sm"
               >
-                {updating ? "Processing..." : "✓ Mark Completed"}
+                {updating
+                  ? "Processing..."
+                  : "✓ Mark Completed"}
               </button>
             </div>
 
@@ -316,7 +389,7 @@ function TeacherCertificateRequests() {
       )}
 
       <Footer />
-    </div>
+    </Sidebar>
   );
 }
 

@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import Navbar from "../components/Navbar";
+import Sidebar from "../components/Sidebar";
 import Footer from "../components/Footer";
 import PageHeader from "../components/PageHeader";
 import StatusBadge from "../components/StatusBadge";
@@ -119,9 +119,7 @@ function TeacherCertificates() {
   );
 
   return (
-    <div className="min-h-screen bg-[#050505] text-white flex flex-col">
-      <Navbar role="teacher" />
-
+    <Sidebar role="teacher">
       <main className="max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-8 sm:py-10 flex-1">
         
         <PageHeader
@@ -144,7 +142,9 @@ function TeacherCertificates() {
         )}
 
         {/* LOADING */}
-        {loading && <LoadingState message="Loading certificate uploads..." />}
+        {loading && (
+          <LoadingState message="Loading certificate uploads..." />
+        )}
 
         {/* EMPTY STATE */}
         {!loading && pendingCertificates.length === 0 && (
@@ -171,6 +171,7 @@ function TeacherCertificates() {
                       <span className="text-[10px] font-semibold uppercase tracking-wider px-2 py-0.5 rounded bg-[#17130A] border border-[#3D3318] text-[#D4AF37]">
                         Credential
                       </span>
+
                       <StatusBadge status={cert.status} />
                     </div>
 
@@ -180,41 +181,64 @@ function TeacherCertificates() {
 
                     {/* METADATA GRID */}
                     <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 mt-3 text-xs">
+                      
                       <div className="bg-[#080808] p-2.5 rounded-lg border border-[#1F1F1F]">
-                        <span className="text-[10px] text-[#888888] uppercase block">Student</span>
+                        <span className="text-[10px] text-[#888888] uppercase block">
+                          Student
+                        </span>
+
                         <span className="font-semibold text-white truncate block">
                           {cert.student_name || "N/A"}
                         </span>
                       </div>
 
                       <div className="bg-[#080808] p-2.5 rounded-lg border border-[#1F1F1F]">
-                        <span className="text-[10px] text-[#888888] uppercase block">Register No</span>
+                        <span className="text-[10px] text-[#888888] uppercase block">
+                          Register No
+                        </span>
+
                         <span className="font-mono text-white truncate block">
                           {cert.student_user_id || "N/A"}
                         </span>
                       </div>
 
                       <div className="bg-[#080808] p-2.5 rounded-lg border border-[#1F1F1F]">
-                        <span className="text-[10px] text-[#888888] uppercase block">Department</span>
+                        <span className="text-[10px] text-[#888888] uppercase block">
+                          Department
+                        </span>
+
                         <span className="text-white truncate block">
                           {cert.department || "General"}
                         </span>
                       </div>
 
                       <div className="bg-[#080808] p-2.5 rounded-lg border border-[#1F1F1F]">
-                        <span className="text-[10px] text-[#888888] uppercase block">Uploaded</span>
+                        <span className="text-[10px] text-[#888888] uppercase block">
+                          Uploaded
+                        </span>
+
                         <span className="text-[#CCCCCC] truncate block">
-                          {cert.created_at ? new Date(cert.created_at).toLocaleDateString() : "-"}
+                          {cert.created_at
+                            ? new Date(
+                                cert.created_at
+                              ).toLocaleDateString()
+                            : "-"}
                         </span>
                       </div>
+
                     </div>
 
                     {/* DOCUMENT FILENAME CALLOUT */}
                     <div className="mt-3.5 bg-[#080808] border border-[#222222] rounded-xl p-3 flex items-center justify-between text-xs">
                       <div className="flex items-center gap-2 text-[#CCCCCC] truncate max-w-md">
                         <span className="text-[#D4AF37]">📎</span>
-                        <span className="font-mono truncate">{cert.file_name || "certificate-document.pdf"}</span>
+
+                        <span className="font-mono truncate">
+                          {cert.file_name ||
+                            "certificate-document.pdf"}
+                        </span>
                       </div>
+
                       {cert.upload_id && (
                         <span className="text-[10px] text-[#666666] font-mono shrink-0">
                           ID: {cert.upload_id}
@@ -254,10 +278,12 @@ function TeacherCertificates() {
               <div>
                 <div className="flex items-center gap-2 mb-1">
                   <span className="w-2 h-2 rounded-full bg-[#D4AF37]" />
+
                   <span className="text-[11px] font-semibold tracking-wider text-[#D4AF37] uppercase">
                     Document Verification
                   </span>
                 </div>
+
                 <h2 className="text-lg font-bold text-white tracking-tight">
                   {selectedCertificate.certificate_type}
                 </h2>
@@ -279,20 +305,43 @@ function TeacherCertificates() {
             {/* STUDENT DETAILS BOX */}
             <div className="mb-4 bg-[#080808] border border-[#222222] rounded-xl p-3.5 space-y-2 text-xs">
               <div className="flex justify-between">
-                <span className="text-[#888888]">Student Name</span>
-                <span className="font-semibold text-white">{selectedCertificate.student_name || "N/A"}</span>
+                <span className="text-[#888888]">
+                  Student Name
+                </span>
+
+                <span className="font-semibold text-white">
+                  {selectedCertificate.student_name || "N/A"}
+                </span>
               </div>
+
               <div className="flex justify-between">
-                <span className="text-[#888888]">Register Number</span>
-                <span className="font-mono text-white">{selectedCertificate.student_user_id || "N/A"}</span>
+                <span className="text-[#888888]">
+                  Register Number
+                </span>
+
+                <span className="font-mono text-white">
+                  {selectedCertificate.student_user_id || "N/A"}
+                </span>
               </div>
+
               <div className="flex justify-between">
-                <span className="text-[#888888]">Department</span>
-                <span className="text-white">{selectedCertificate.department || "N/A"}</span>
+                <span className="text-[#888888]">
+                  Department
+                </span>
+
+                <span className="text-white">
+                  {selectedCertificate.department || "N/A"}
+                </span>
               </div>
+
               <div className="flex justify-between">
-                <span className="text-[#888888]">Uploaded File</span>
-                <span className="text-[#D4AF37] font-mono truncate max-w-xs">{selectedCertificate.file_name || "N/A"}</span>
+                <span className="text-[#888888]">
+                  Uploaded File
+                </span>
+
+                <span className="text-[#D4AF37] font-mono truncate max-w-xs">
+                  {selectedCertificate.file_name || "N/A"}
+                </span>
               </div>
             </div>
 
@@ -312,7 +361,7 @@ function TeacherCertificates() {
               />
             </div>
 
-            {/* BUTTONS (VERIFY & REJECT) */}
+            {/* BUTTONS */}
             <div className="flex gap-3 mt-6">
               <button
                 type="button"
@@ -350,8 +399,8 @@ function TeacherCertificates() {
       )}
 
       <Footer />
-    </div>
+    </Sidebar>
   );
 }
 
-export default TeacherCertificates;
+export default TeacherCertificates;   

@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import Navbar from "../components/Navbar";
+import Sidebar from "../components/Sidebar";
 import Footer from "../components/Footer";
 import PageHeader from "../components/PageHeader";
 import StatusBadge from "../components/StatusBadge";
@@ -116,9 +116,7 @@ function TeacherClassIssues() {
   );
 
   return (
-    <div className="min-h-screen bg-[#050505] text-white flex flex-col">
-      <Navbar role="teacher" />
-
+    <Sidebar role="teacher">
       <main className="max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-8 sm:py-10 flex-1">
         
         <PageHeader
@@ -141,7 +139,9 @@ function TeacherClassIssues() {
         )}
 
         {/* LOADING */}
-        {loading && <LoadingState message="Fetching pending class issues..." />}
+        {loading && (
+          <LoadingState message="Fetching pending class issues..." />
+        )}
 
         {/* EMPTY STATE */}
         {!loading && pendingIssues.length === 0 && (
@@ -168,6 +168,7 @@ function TeacherClassIssues() {
                       <span className="text-[10px] font-semibold uppercase tracking-wider px-2 py-0.5 rounded bg-[#17130A] border border-[#3D3318] text-[#D4AF37]">
                         {issue.issue_type || "General"}
                       </span>
+
                       <StatusBadge status={issue.status} />
                     </div>
 
@@ -177,38 +178,59 @@ function TeacherClassIssues() {
 
                     {/* METADATA CHIPS */}
                     <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-2 mt-4 text-xs">
+                      
                       <div className="bg-[#080808] p-2.5 rounded-lg border border-[#1F1F1F]">
-                        <span className="text-[10px] text-[#888888] uppercase block">Student</span>
+                        <span className="text-[10px] text-[#888888] uppercase block">
+                          Student
+                        </span>
+
                         <span className="font-semibold text-white truncate block">
                           {issue.student_name || "N/A"}
                         </span>
                       </div>
 
                       <div className="bg-[#080808] p-2.5 rounded-lg border border-[#1F1F1F]">
-                        <span className="text-[10px] text-[#888888] uppercase block">Register No</span>
+                        <span className="text-[10px] text-[#888888] uppercase block">
+                          Register No
+                        </span>
+
                         <span className="font-mono text-white truncate block">
                           {issue.student_user_id || "N/A"}
                         </span>
                       </div>
 
                       <div className="bg-[#080808] p-2.5 rounded-lg border border-[#1F1F1F]">
-                        <span className="text-[10px] text-[#888888] uppercase block">Department</span>
+                        <span className="text-[10px] text-[#888888] uppercase block">
+                          Department
+                        </span>
+
                         <span className="text-white truncate block">
                           {issue.department || "General"}
                         </span>
                       </div>
 
                       <div className="bg-[#080808] p-2.5 rounded-lg border border-[#1F1F1F]">
-                        <span className="text-[10px] text-[#888888] uppercase block">Date Logged</span>
+                        <span className="text-[10px] text-[#888888] uppercase block">
+                          Date Logged
+                        </span>
+
                         <span className="text-[#CCCCCC] truncate block">
-                          {issue.created_at ? new Date(issue.created_at).toLocaleDateString() : "-"}
+                          {issue.created_at
+                            ? new Date(
+                                issue.created_at
+                              ).toLocaleDateString()
+                            : "-"}
                         </span>
                       </div>
+
                     </div>
 
                     {issue.location && (
                       <p className="mt-3 text-xs text-[#CCCCCC]">
-                        📍 Location: <strong className="text-white">{issue.location}</strong>
+                        📍 Location:{" "}
+                        <strong className="text-white">
+                          {issue.location}
+                        </strong>
                       </p>
                     )}
 
@@ -217,6 +239,7 @@ function TeacherClassIssues() {
                       <p className="text-[10px] font-semibold text-[#777777] uppercase tracking-wider mb-1">
                         Reported Details
                       </p>
+
                       <p className="text-xs text-[#CCCCCC] leading-relaxed whitespace-pre-wrap">
                         {issue.description}
                       </p>
@@ -253,10 +276,12 @@ function TeacherClassIssues() {
               <div>
                 <div className="flex items-center gap-2 mb-1">
                   <span className="w-2 h-2 rounded-full bg-[#D4AF37]" />
+
                   <span className="text-[11px] font-semibold tracking-wider text-[#D4AF37] uppercase">
                     Issue Resolution
                   </span>
                 </div>
+
                 <h2 className="text-lg font-bold text-white tracking-tight">
                   {selectedIssue.title}
                 </h2>
@@ -277,8 +302,11 @@ function TeacherClassIssues() {
             {/* STUDENT ISSUE RECAP */}
             <div className="mb-5 bg-[#080808] border border-[#222222] rounded-xl p-3.5 text-xs">
               <span className="text-[10px] font-semibold text-[#888888] uppercase tracking-wider block mb-1">
-                Student Report ({selectedIssue.student_name} - {selectedIssue.student_user_id})
+                Student Report (
+                {selectedIssue.student_name} -{" "}
+                {selectedIssue.student_user_id})
               </span>
+
               <p className="text-[#CCCCCC] leading-relaxed">
                 {selectedIssue.description}
               </p>
@@ -287,7 +315,8 @@ function TeacherClassIssues() {
             {/* RESOLUTION INPUT */}
             <div>
               <label className="block text-xs font-semibold text-[#CCCCCC] uppercase tracking-wider mb-2">
-                Faculty Resolution Remarks <span className="text-[#D4AF37]">*</span>
+                Faculty Resolution Remarks{" "}
+                <span className="text-[#D4AF37]">*</span>
               </label>
 
               <textarea
@@ -329,7 +358,7 @@ function TeacherClassIssues() {
       )}
 
       <Footer />
-    </div>
+    </Sidebar>
   );
 }
 
