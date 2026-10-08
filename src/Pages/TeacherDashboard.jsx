@@ -1,947 +1,518 @@
-import { Link } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import Navbar from "../components/Navbar";
+import Footer from "../components/Footer";
+import StatusBadge from "../components/StatusBadge";
+import LoadingState from "../components/LoadingState";
 
-function TeacherDashboard({ darkMode, setDarkMode }) {
-  const summaryCards = [
-    {
-      title: "Class Issues",
-      count: 4,
-      icon: "⚠️",
-      link: "/teacher/class-issues",
-    },
-    {
-      title: "Leave / OD",
-      count: 6,
-      icon: "📋",
-      link: "/teacher/leave-od",
-    },
-    {
-      title: "Certificates",
-      count: 3,
-      icon: "📜",
-      link: "/teacher/certificates",
-    },
-    {
-      title: "Events",
-      count: 2,
-      icon: "📅",
-      link: "/teacher/events",
-    },
-  ];
+function TeacherDashboard() {
+  const navigate = useNavigate();
 
-  const pendingRequests = [
-    {
-      name: "Midhun K",
-      type: "Leave",
-      reason: "Medical leave",
-      status: "Pending",
-    },
-    {
-      name: "Arun Kumar",
-      type: "OD",
-      reason: "Hackathon participation",
-      status: "Pending",
-    },
-    {
-      name: "Rahul S",
-      type: "Certificate",
-      reason: "Bonafide Certificate",
-      status: "Pending",
-    },
-  ];
+  const [classIssues, setClassIssues] = useState([]);
+  const [leaveRequests, setLeaveRequests] = useState([]);
+  const [certificateUploads, setCertificateUploads] = useState([]);
+  const [certificateRequests, setCertificateRequests] = useState([]);
+  const [events, setEvents] = useState([]);
+  const [approvedRequests, setApprovedRequests] = useState([]);
+
+  const [loading, setLoading] = useState(true);
+  const [errorMessage, setErrorMessage] = useState("");
+
+  const API = "http://localhost:5000/api";
+
+  const getToken = () => {
+    return (
+      localStorage.getItem("token") ||
+      localStorage.getItem("accessToken")
+    );
+  };
+
+  const fetchDashboardData = async () => {
+    try {
+      setLoading(true);
+      setErrorMessage("");
+
+      const token = getToken();
+
+      if (!token) {
+        navigate("/");
+        return;
+      }
+
+      const headers = {
+        Authorization: `Bearer ${token}`,
+      };
+
+      const [
+        classIssueResponse,
+        leaveResponse,
+        certificateUploadResponse,
+        certificateRequestResponse,
+        eventResponse,
+        approvedResponse,
+      ] = await Promise.all([
+        fetch(`${API}/class-issues/pending`, { headers }),
+        fetch(`${API}/leave-od/pending`, { headers }),
+        fetch(`${API}/certificate-uploads/pending`, { headers }),
+        fetch(`${API}/certificate-requests/pending`, { headers }),
+        fetch(`${API}/events`, { headers }),
+        fetch(`${API}/leave-od/approved/current`, { headers }),
+      ]);
+
+      if (
+        !classIssueResponse.ok ||
+        !leaveResponse.ok ||
+        !certificateUploadResponse.ok ||
+        !certificateRequestResponse.ok ||
+        !eventResponse.ok ||
+        !approvedResponse.ok
+      ) {
+        throw new Error("Failed to load dashboard data from server.");
+      }
+
+      const classIssueData = await classIssueResponse.json();
+      const leaveData = await leaveResponse.json();
+      const certificateUploadData = await certificateUploadResponse.json();
+      const certificateRequestData = await certificateRequestResponse.json();
+      const eventData = await eventResponse.json();
+      const approvedData = await approvedResponse.json();
+
+      setClassIssues(
+        classIssueData.requests || classIssueData.issues || []
+      );
+      setLeaveRequests(leaveData.requests || []);
+      setCertificateUploads(certificateUploadData.uploads || []);
+      setCertificateRequests(certificateRequestData.requests || []);
+      setEvents(eventData.events || []);
+      setApprovedRequests(approvedData.requests || []);
+    } catch (error) {
+      console.error("Teacher dashboard error:", error);
+      setErrorMessage(error.message || "Failed to load dashboard data.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchDashboardData();
+  }, []);
+
+  let user = null;
+  try {
+    const raw = localStorage.getItem("user");
+    if (raw) user = JSON.parse(raw);
+  } catch {
+    user = null;
+  }
+  const teacherName = user?.name || user?.username || "Faculty";
+  const department = user?.department || "";
+
+  const pendingClassIssues = classIssues.length;
+  const pendingLeaveRequests = leaveRequests.length;
+  const pendingCertificateUploads = certificateUploads.length;
+  const pendingCertificateRequests = certificateRequests.length;
+  const eventCount = events.length;
+  const totalPendingWork = pendingClassIssues + pendingLeaveRequests + pendingCertificateUploads + pendingCertificateRequests;
+
+  const absentStudents = approvedRequests.filter(
+    (request) => request.request_type === "LEAVE"
+  );
+
+  const odStudents = approvedRequests.filter(
+    (request) => request.request_type === "OD"
+  );
+
+  const formatDate = (date) => {
+    if (!date) return "-";
+    const value = String(date).split("T")[0];
+    const parts = value.split("-");
+    if (parts.length !== 3) return date;
+    return `${parts[2]}-${parts[1]}-${parts[0]}`;
+  };
+
+  const formatTime = (time) => {
+    if (!time) return "";
+    const value = String(time).substring(0, 5);
+    const parts = value.split(":");
+    if (parts.length < 2) return time;
+    let hours = parseInt(parts[0], 10);
+    const minutes = parts[1];
+    const period = hours >= 12 ? "PM" : "AM";
+    hours = hours % 12 || 12;
+    return `${hours}:${minutes} ${period}`;
+  };
+
+  const todayFormatted = new Date().toLocaleDateString("en-US", {
+    weekday: "long",
+    year: "numeric",
+    month: "short",
+    day: "numeric",
+  });
 
   return (
     <div className="min-h-screen bg-[#050505] text-white flex flex-col">
+      <Navbar role="teacher" />
 
-      {/* ================= HEADER ================= */}
-      <header className="bg-[#050505] border-b border-[#292929]">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-4">
+      <main className="max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-8 sm:py-10 flex-1">
+        
+        {/* ================= GREETING HERO ================= */}
+        <div className="mb-8 bg-[#0D0D0D] border border-[#292929] rounded-2xl p-6 sm:p-8 relative overflow-hidden">
+          <div className="absolute top-0 right-0 w-80 h-80 bg-[#D4AF37]/5 blur-3xl rounded-full pointer-events-none" />
 
-          <div className="flex items-center justify-between gap-4">
-
-            {/* BRAND */}
-            <div className="flex items-center gap-3 min-w-0">
-
-              <div className="
-                w-11
-                h-11
-                shrink-0
-                rounded-xl
-                bg-[#D4AF37]
-                flex
-                items-center
-                justify-center
-                text-[#050505]
-                font-bold
-                shadow-[0_0_18px_rgba(212,175,55,0.12)]
-              ">
-                SI
+          <div className="relative z-10 flex flex-col md:flex-row md:items-center md:justify-between gap-6">
+            <div>
+              <div className="flex items-center gap-2 mb-2">
+                <span className="w-2 h-2 rounded-full bg-[#D4AF37]" />
+                <span className="text-xs font-semibold uppercase tracking-widest text-[#D4AF37]">
+                  Faculty Management Desk
+                </span>
+                <span className="text-xs text-[#555555]">•</span>
+                <span className="text-xs text-[#888888]">{todayFormatted}</span>
               </div>
 
-              <div className="min-w-0">
-                <h1 className="
-                  text-lg
-                  sm:text-xl
-                  font-bold
-                  text-white
-                  truncate
-                ">
-                  College Management Portal
-                </h1>
+              <h1 className="text-2xl sm:text-3xl font-bold text-white tracking-tight">
+                Welcome, {teacherName}
+              </h1>
 
-                <p className="
-                  text-xs
-                  sm:text-sm
-                  text-[#B8B8B8]
-                  truncate
-                ">
-                  Smart Infrastructure Dashboard
+              <p className="text-sm text-[#888888] mt-1.5 max-w-2xl leading-relaxed">
+                Review student grievances, verify credentials, validate leave applications, and supervise departmental on-duty participation.
+              </p>
+
+              {department && (
+                <div className="mt-3">
+                  <span className="px-2.5 py-1 rounded-md bg-[#141414] border border-[#292929] text-xs text-[#B8B8B8]">
+                    Department: <strong className="text-white font-semibold">{department}</strong>
+                  </span>
+                </div>
+              )}
+            </div>
+
+            {/* STATUS SUMMARY PILL */}
+            <div className="shrink-0 flex items-center gap-3 bg-[#080808] border border-[#222222] p-4 rounded-xl">
+              <div className="w-10 h-10 rounded-xl bg-[#17130A] border border-[#3D3318] flex items-center justify-center text-lg text-[#D4AF37]">
+                ⚡
+              </div>
+              <div>
+                <p className="text-xs font-semibold text-white">
+                  {totalPendingWork > 0 ? `${totalPendingWork} Pending Actions` : "All Queues Clear"}
+                </p>
+                <p className="text-[11px] text-[#888888]">
+                  {totalPendingWork > 0 ? "Awaiting your review & decision" : "No pending backlog"}
                 </p>
               </div>
-
             </div>
-
-            {/* PROFILE */}
-            <div className="flex items-center gap-3 sm:gap-5 shrink-0">
-
-              <div className="hidden md:flex items-center gap-3">
-
-                <div className="
-                  w-10
-                  h-10
-                  rounded-full
-                  bg-[#D4AF37]
-                  flex
-                  items-center
-                  justify-center
-                  text-[#050505]
-                  font-bold
-                ">
-                  T
-                </div>
-
-                <div>
-                  <p className="text-sm font-semibold text-white">
-                    Teacher
-                  </p>
-
-                  <p className="text-xs text-[#B8B8B8]">
-                    Faculty
-                  </p>
-                </div>
-
-              </div>
-
-              <Link
-                to="/"
-                className="
-                  px-4
-                  py-2
-                  rounded-lg
-                  bg-[#0D0D0D]
-                  border
-                  border-[#292929]
-                  text-[#B8B8B8]
-                  text-sm
-                  font-medium
-                  hover:border-[#D4AF37]
-                  hover:text-[#D4AF37]
-                  transition
-                  duration-200
-                "
-              >
-                Logout
-              </Link>
-
-            </div>
-
           </div>
-
         </div>
-      </header>
 
-      {/* ================= MAIN ================= */}
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 py-8 flex-1">
+        {/* ERROR MESSAGE */}
+        {errorMessage && (
+          <div className="mb-6 p-4 rounded-xl bg-[#1C0D0D] border border-[#3D1B1B] text-[#F87171] text-xs flex items-start gap-2.5">
+            <span className="w-1.5 h-1.5 rounded-full bg-[#F87171] mt-1 shrink-0" />
+            <span className="leading-relaxed">{errorMessage}</span>
+          </div>
+        )}
 
-        {/* ================= WELCOME ================= */}
-        <section className="mb-10">
-
-          <div className="
-            flex
-            flex-col
-            lg:flex-row
-            lg:items-end
-            lg:justify-between
-            gap-5
-          ">
-
+        {/* ================= KEY METRICS / OVERVIEW CARDS ================= */}
+        <div className="mb-10">
+          <div className="flex items-center justify-between mb-4">
             <div>
-
-              <div className="flex items-center gap-2 mb-3">
-
-                <span className="
-                  w-2
-                  h-2
-                  rounded-full
-                  bg-[#D4AF37]
-                "></span>
-
-                <span className="
-                  text-xs
-                  sm:text-sm
-                  font-semibold
-                  tracking-widest
-                  text-[#D4AF37]
-                ">
-                  FACULTY PORTAL
-                </span>
-
-              </div>
-
-              <h2 className="
-                text-3xl
-                sm:text-4xl
-                font-bold
-                text-white
-                tracking-tight
-              ">
-                Welcome back, Teacher
+              <h2 className="text-base font-bold text-white tracking-tight">
+                Review Queues & Workflows
               </h2>
-
-              <p className="
-                mt-2
-                text-[#B8B8B8]
-                max-w-2xl
-              ">
-                Monitor and manage your college activities from one place.
+              <p className="text-xs text-[#888888]">
+                Real-time queue counts prioritized for quick processing
               </p>
-
             </div>
-
-            {/* SYSTEM STATUS */}
-            <div className="
-              inline-flex
-              self-start
-              lg:self-auto
-              items-center
-              gap-2
-              px-4
-              py-2.5
-              bg-[#0D0D0D]
-              border
-              border-[#292929]
-              rounded-lg
-            ">
-
-              <span className="
-                w-2
-                h-2
-                rounded-full
-                bg-[#D4AF37]
-                shadow-[0_0_8px_rgba(212,175,55,0.5)]
-              "></span>
-
-              <span className="
-                text-sm
-                font-medium
-                text-[#D0D0D0]
-              ">
-                System Operational
-              </span>
-
-            </div>
-
           </div>
 
-        </section>
-
-        {/* ================= OVERVIEW ================= */}
-        <section className="mb-10">
-
-          <div className="mb-5">
-
-            <h2 className="
-              text-xl
-              font-bold
-              text-white
-            ">
-              Overview
-            </h2>
-
-            <p className="
-              text-sm
-              text-[#888888]
-              mt-1
-            ">
-              Current activity across your faculty portal
-            </p>
-
-          </div>
-
-          <div className="
-            grid
-            grid-cols-1
-            sm:grid-cols-2
-            lg:grid-cols-4
-            gap-5
-          ">
-
-            {summaryCards.map((card) => (
-              <Link
-                key={card.title}
-                to={card.link}
-                className="
-                  group
-                  bg-[#0D0D0D]
-                  border
-                  border-[#292929]
-                  rounded-2xl
-                  p-5
-                  shadow-lg
-                  hover:border-[#D4AF37]
-                  hover:shadow-[0_0_24px_rgba(212,175,55,0.07)]
-                  transition-all
-                  duration-200
-                "
-              >
-
-                <div className="
-                  flex
-                  items-start
-                  justify-between
-                  gap-4
-                ">
-
-                  <div>
-
-                    <p className="
-                      text-sm
-                      font-medium
-                      text-[#B8B8B8]
-                    ">
-                      {card.title}
-                    </p>
-
-                    <p className="
-                      text-3xl
-                      font-bold
-                      mt-2
-                      text-white
-                    ">
-                      {card.count}
-                    </p>
-
-                    <p className="
-                      text-sm
-                      font-medium
-                      mt-4
-                      text-[#D4AF37]
-                      group-hover:text-[#F2D675]
-                      transition
-                    ">
-                      View details →
-                    </p>
-
-                  </div>
-
-                  <div className="
-                    w-11
-                    h-11
-                    shrink-0
-                    rounded-xl
-                    bg-[#17130A]
-                    border
-                    border-[#3D3318]
-                    flex
-                    items-center
-                    justify-center
-                    text-xl
-                  ">
-                    {card.icon}
-                  </div>
-
-                </div>
-
-              </Link>
-            ))}
-
-          </div>
-
-        </section>
-
-        {/* ================= QUICK ACTIONS ================= */}
-        <section className="mb-10">
-
-          <div className="mb-5">
-
-            <h2 className="
-              text-xl
-              font-bold
-              text-white
-            ">
-              Quick Actions
-            </h2>
-
-            <p className="
-              text-sm
-              text-[#888888]
-              mt-1
-            ">
-              Frequently used faculty operations
-            </p>
-
-          </div>
-
-          <div className="
-            grid
-            grid-cols-1
-            sm:grid-cols-2
-            lg:grid-cols-4
-            gap-4
-          ">
-
-            {/* CLASS ISSUES */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+            
+            {/* 1. CLASS ISSUES */}
             <Link
               to="/teacher/class-issues"
-              className="
-                group
-                bg-[#0D0D0D]
-                border
-                border-[#292929]
-                rounded-2xl
-                p-5
-                hover:border-[#D4AF37]
-                shadow-lg
-                transition
-                duration-200
-              "
+              className="group bg-[#0D0D0D] border border-[#292929] hover:border-[#D4AF37]/70 rounded-2xl p-5 transition-all duration-150 flex flex-col justify-between"
             >
+              <div>
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-semibold text-[#888888] group-hover:text-white transition-colors">
+                    Class Issues
+                  </span>
+                  <span className="text-lg">🏫</span>
+                </div>
 
-              <div className="
-                w-10
-                h-10
-                rounded-xl
-                bg-[#D4AF37]
-                text-[#050505]
-                flex
-                items-center
-                justify-center
-                text-lg
-                mb-4
-              ">
-                ⚠️
+                <div className="mt-3">
+                  <span className="text-3xl font-black text-white group-hover:text-[#D4AF37] transition-colors">
+                    {loading ? "—" : pendingClassIssues}
+                  </span>
+                </div>
               </div>
 
-              <h3 className="font-semibold text-white">
-                Class Issues
-              </h3>
-
-              <p className="
-                text-sm
-                mt-1
-                text-[#888888]
-              ">
-                Review student class issues
-              </p>
-
-              <div className="
-                mt-4
-                text-sm
-                font-semibold
-                text-[#D4AF37]
-                group-hover:text-[#F2D675]
-                transition
-              ">
-                Manage →
+              <div className="mt-4 pt-3 border-t border-[#1C1C1C] flex items-center justify-between text-xs">
+                <span className="text-[11px] text-[#888888]">Pending</span>
+                <span className="text-[#D4AF37] font-semibold group-hover:translate-x-1 transition-transform">
+                  Review →
+                </span>
               </div>
-
             </Link>
 
-            {/* LEAVE / OD */}
+            {/* 2. LEAVE / OD */}
             <Link
               to="/teacher/leave-od"
-              className="
-                group
-                bg-[#0D0D0D]
-                border
-                border-[#292929]
-                rounded-2xl
-                p-5
-                hover:border-[#D4AF37]
-                shadow-lg
-                transition
-                duration-200
-              "
+              className="group bg-[#0D0D0D] border border-[#292929] hover:border-[#D4AF37]/70 rounded-2xl p-5 transition-all duration-150 flex flex-col justify-between"
             >
+              <div>
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-semibold text-[#888888] group-hover:text-white transition-colors">
+                    Leave / OD
+                  </span>
+                  <span className="text-lg">📝</span>
+                </div>
 
-              <div className="
-                w-10
-                h-10
-                rounded-xl
-                bg-[#D4AF37]
-                text-[#050505]
-                flex
-                items-center
-                justify-center
-                text-lg
-                mb-4
-              ">
-                📋
+                <div className="mt-3">
+                  <span className="text-3xl font-black text-white group-hover:text-[#D4AF37] transition-colors">
+                    {loading ? "—" : pendingLeaveRequests}
+                  </span>
+                </div>
               </div>
 
-              <h3 className="font-semibold text-white">
-                Leave / OD
-              </h3>
-
-              <p className="
-                text-sm
-                mt-1
-                text-[#888888]
-              ">
-                Manage leave and OD requests
-              </p>
-
-              <div className="
-                mt-4
-                text-sm
-                font-semibold
-                text-[#D4AF37]
-                group-hover:text-[#F2D675]
-                transition
-              ">
-                Manage →
+              <div className="mt-4 pt-3 border-t border-[#1C1C1C] flex items-center justify-between text-xs">
+                <span className="text-[11px] text-[#888888]">Pending</span>
+                <span className="text-[#D4AF37] font-semibold group-hover:translate-x-1 transition-transform">
+                  Process →
+                </span>
               </div>
-
             </Link>
 
-            {/* CERTIFICATES */}
+            {/* 3. CERTIFICATES */}
             <Link
               to="/teacher/certificates"
-              className="
-                group
-                bg-[#0D0D0D]
-                border
-                border-[#292929]
-                rounded-2xl
-                p-5
-                hover:border-[#D4AF37]
-                shadow-lg
-                transition
-                duration-200
-              "
+              className="group bg-[#0D0D0D] border border-[#292929] hover:border-[#D4AF37]/70 rounded-2xl p-5 transition-all duration-150 flex flex-col justify-between"
             >
+              <div>
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-semibold text-[#888888] group-hover:text-white transition-colors">
+                    Cert Uploads
+                  </span>
+                  <span className="text-lg">📜</span>
+                </div>
 
-              <div className="
-                w-10
-                h-10
-                rounded-xl
-                bg-[#D4AF37]
-                text-[#050505]
-                flex
-                items-center
-                justify-center
-                text-lg
-                mb-4
-              ">
-                📜
+                <div className="mt-3">
+                  <span className="text-3xl font-black text-white group-hover:text-[#D4AF37] transition-colors">
+                    {loading ? "—" : pendingCertificateUploads}
+                  </span>
+                </div>
               </div>
 
-              <h3 className="font-semibold text-white">
-                Certificates
-              </h3>
-
-              <p className="
-                text-sm
-                mt-1
-                text-[#888888]
-              ">
-                Review certificate requests
-              </p>
-
-              <div className="
-                mt-4
-                text-sm
-                font-semibold
-                text-[#D4AF37]
-                group-hover:text-[#F2D675]
-                transition
-              ">
-                Manage →
+              <div className="mt-4 pt-3 border-t border-[#1C1C1C] flex items-center justify-between text-xs">
+                <span className="text-[11px] text-[#888888]">Pending</span>
+                <span className="text-[#D4AF37] font-semibold group-hover:translate-x-1 transition-transform">
+                  Verify →
+                </span>
               </div>
-
             </Link>
 
-            {/* EVENTS */}
+            {/* 4. CERTIFICATE REQUESTS */}
+            <Link
+              to="/teacher/certificate-requests"
+              className="group bg-[#0D0D0D] border border-[#292929] hover:border-[#D4AF37]/70 rounded-2xl p-5 transition-all duration-150 flex flex-col justify-between"
+            >
+              <div>
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-semibold text-[#888888] group-hover:text-white transition-colors">
+                    Cert Requests
+                  </span>
+                  <span className="text-lg">📋</span>
+                </div>
+
+                <div className="mt-3">
+                  <span className="text-3xl font-black text-white group-hover:text-[#D4AF37] transition-colors">
+                    {loading ? "—" : pendingCertificateRequests}
+                  </span>
+                </div>
+              </div>
+
+              <div className="mt-4 pt-3 border-t border-[#1C1C1C] flex items-center justify-between text-xs">
+                <span className="text-[11px] text-[#888888]">Pending</span>
+                <span className="text-[#D4AF37] font-semibold group-hover:translate-x-1 transition-transform">
+                  Process →
+                </span>
+              </div>
+            </Link>
+
+            {/* 5. EVENTS */}
             <Link
               to="/teacher/events"
-              className="
-                group
-                bg-[#0D0D0D]
-                border
-                border-[#292929]
-                rounded-2xl
-                p-5
-                hover:border-[#D4AF37]
-                shadow-lg
-                transition
-                duration-200
-              "
+              className="group bg-[#0D0D0D] border border-[#292929] hover:border-[#D4AF37]/70 rounded-2xl p-5 transition-all duration-150 flex flex-col justify-between"
             >
+              <div>
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-semibold text-[#888888] group-hover:text-white transition-colors">
+                    Campus Events
+                  </span>
+                  <span className="text-lg">🎉</span>
+                </div>
 
-              <div className="
-                w-10
-                h-10
-                rounded-xl
-                bg-[#D4AF37]
-                text-[#050505]
-                flex
-                items-center
-                justify-center
-                text-lg
-                mb-4
-              ">
-                📅
+                <div className="mt-3">
+                  <span className="text-3xl font-black text-white group-hover:text-[#D4AF37] transition-colors">
+                    {loading ? "—" : eventCount}
+                  </span>
+                </div>
               </div>
 
-              <h3 className="font-semibold text-white">
-                Events
-              </h3>
-
-              <p className="
-                text-sm
-                mt-1
-                text-[#888888]
-              ">
-                Manage college events
-              </p>
-
-              <div className="
-                mt-4
-                text-sm
-                font-semibold
-                text-[#D4AF37]
-                group-hover:text-[#F2D675]
-                transition
-              ">
-                Manage →
+              <div className="mt-4 pt-3 border-t border-[#1C1C1C] flex items-center justify-between text-xs">
+                <span className="text-[11px] text-[#888888]">Published</span>
+                <span className="text-[#D4AF37] font-semibold group-hover:translate-x-1 transition-transform">
+                  Manage →
+                </span>
               </div>
-
             </Link>
 
           </div>
+        </div>
 
-        </section>
-
-        {/* ================= PENDING REQUESTS ================= */}
-        <section>
-
-          <div className="
-            flex
-            flex-col
-            sm:flex-row
-            sm:items-center
-            justify-between
-            gap-3
-            mb-5
-          ">
-
+        {/* ================= LIVE STUDENT STATUS SECTION ================= */}
+        <div className="mb-10">
+          <div className="flex items-center justify-between mb-4">
             <div>
-
-              <h2 className="
-                text-xl
-                font-bold
-                text-white
-              ">
-                Pending Requests
+              <h2 className="text-base font-bold text-white tracking-tight">
+                Live Student Status (Today)
               </h2>
-
-              <p className="
-                text-sm
-                text-[#888888]
-                mt-1
-              ">
-                Requests that require your attention
+              <p className="text-xs text-[#888888]">
+                Real-time roster of students currently on officially approved Leave or On-Duty permissions
               </p>
-
             </div>
-
-            <div className="
-              inline-flex
-              self-start
-              sm:self-auto
-              items-center
-              gap-2
-              px-3
-              py-1.5
-              rounded-full
-              bg-[#17130A]
-              border
-              border-[#3D3318]
-            ">
-
-              <span className="
-                w-2
-                h-2
-                rounded-full
-                bg-[#D4AF37]
-              "></span>
-
-              <span className="
-                text-sm
-                font-semibold
-                text-[#D4AF37]
-              ">
-                {pendingRequests.length} pending
-              </span>
-
-            </div>
-
+            <Link
+              to="/teacher/leave-od"
+              className="text-xs text-[#D4AF37] hover:underline font-semibold"
+            >
+              Manage Leave / OD →
+            </Link>
           </div>
 
-          {/* TABLE */}
-          <div className="
-            overflow-hidden
-            rounded-2xl
-            border
-            border-[#292929]
-            bg-[#0D0D0D]
-            shadow-lg
-          ">
+          <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
+            
+            {/* ABSENT STUDENTS (APPROVED LEAVE) */}
+            <div className="bg-[#0D0D0D] border border-[#292929] rounded-2xl overflow-hidden flex flex-col shadow-sm">
+              <div className="px-6 py-4 border-b border-[#222222] flex items-center justify-between bg-[#080808]">
+                <div className="flex items-center gap-2.5">
+                  <span className="w-2 h-2 rounded-full bg-[#F87171]" />
+                  <h3 className="text-sm font-bold text-white">
+                    Absent Students (Leave)
+                  </h3>
+                </div>
+                <StatusBadge status="ABSENT" />
+              </div>
 
-            <div className="overflow-x-auto">
-
-              <table className="w-full">
-
-                <thead>
-
-                  <tr className="
-                    bg-[#111111]
-                    border-b
-                    border-[#292929]
-                  ">
-
-                    <th className="
-                      text-left
-                      px-6
-                      py-4
-                      text-xs
-                      font-semibold
-                      uppercase
-                      tracking-wider
-                      text-[#D4AF37]
-                    ">
-                      Student
-                    </th>
-
-                    <th className="
-                      text-left
-                      px-6
-                      py-4
-                      text-xs
-                      font-semibold
-                      uppercase
-                      tracking-wider
-                      text-[#D4AF37]
-                    ">
-                      Type
-                    </th>
-
-                    <th className="
-                      text-left
-                      px-6
-                      py-4
-                      text-xs
-                      font-semibold
-                      uppercase
-                      tracking-wider
-                      text-[#D4AF37]
-                    ">
-                      Reason
-                    </th>
-
-                    <th className="
-                      text-left
-                      px-6
-                      py-4
-                      text-xs
-                      font-semibold
-                      uppercase
-                      tracking-wider
-                      text-[#D4AF37]
-                    ">
-                      Status
-                    </th>
-
-                  </tr>
-
-                </thead>
-
-                <tbody>
-
-                  {pendingRequests.map((request, index) => (
-
-                    <tr
-                      key={index}
-                      className="
-                        border-b
-                        border-[#292929]
-                        last:border-b-0
-                        hover:bg-[#141414]
-                        transition
-                        duration-150
-                      "
-                    >
-
-                      {/* STUDENT */}
-                      <td className="px-6 py-4">
-
-                        <div className="flex items-center gap-3">
-
-                          <div className="
-                            w-9
-                            h-9
-                            shrink-0
-                            rounded-full
-                            bg-[#D4AF37]
-                            text-[#050505]
-                            flex
-                            items-center
-                            justify-center
-                            text-sm
-                            font-bold
-                          ">
-                            {request.name.charAt(0)}
+              <div className="p-4 flex-1">
+                {loading ? (
+                  <LoadingState message="Loading absent student records..." />
+                ) : absentStudents.length === 0 ? (
+                  <div className="py-12 text-center text-xs text-[#777777]">
+                    ✓ No students are currently on approved leave today.
+                  </div>
+                ) : (
+                  <div className="divide-y divide-[#1A1A1A]">
+                    {absentStudents.map((student) => (
+                      <div key={student.id} className="py-3 px-2 hover:bg-[#121212] rounded-lg transition">
+                        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+                          <div>
+                            <p className="text-xs font-bold text-white">
+                              {student.student_name}
+                            </p>
+                            <p className="text-[11px] text-[#888888] font-mono mt-0.5">
+                              {student.student_user_id}
+                              {student.department ? ` • ${student.department}` : ""}
+                            </p>
                           </div>
 
-                          <span className="
-                            font-medium
-                            text-white
-                            whitespace-nowrap
-                          ">
-                            {request.name}
-                          </span>
-
+                          <div className="sm:text-right text-xs">
+                            <span className="text-[#CCCCCC] font-medium">
+                              {formatDate(student.from_date)} → {formatDate(student.to_date)}
+                            </span>
+                            {(student.from_time || student.to_time) && (
+                              <p className="text-[10px] text-[#777777]">
+                                {formatTime(student.from_time)} → {formatTime(student.to_time)}
+                              </p>
+                            )}
+                          </div>
                         </div>
 
-                      </td>
+                        {student.reason && (
+                          <p className="text-[11px] text-[#888888] mt-2 bg-[#080808] p-2 rounded border border-[#1C1C1C]">
+                            <strong className="text-[#AAAAAA]">Reason:</strong> {student.reason}
+                          </p>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
 
-                      {/* TYPE */}
-                      <td className="
-                        px-6
-                        py-4
-                        text-sm
-                        text-[#B8B8B8]
-                        whitespace-nowrap
-                      ">
-                        {request.type}
-                      </td>
+            {/* OD STUDENTS (APPROVED OD) */}
+            <div className="bg-[#0D0D0D] border border-[#292929] rounded-2xl overflow-hidden flex flex-col shadow-sm">
+              <div className="px-6 py-4 border-b border-[#222222] flex items-center justify-between bg-[#080808]">
+                <div className="flex items-center gap-2.5">
+                  <span className="w-2 h-2 rounded-full bg-[#60A5FA]" />
+                  <h3 className="text-sm font-bold text-white">
+                    On-Duty Students (OD)
+                  </h3>
+                </div>
+                <StatusBadge status="OD" />
+              </div>
 
-                      {/* REASON */}
-                      <td className="
-                        px-6
-                        py-4
-                        text-sm
-                        text-[#B8B8B8]
-                      ">
-                        {request.reason}
-                      </td>
+              <div className="p-4 flex-1">
+                {loading ? (
+                  <LoadingState message="Loading OD student records..." />
+                ) : odStudents.length === 0 ? (
+                  <div className="py-12 text-center text-xs text-[#777777]">
+                    ✓ No students are currently on approved on-duty participation.
+                  </div>
+                ) : (
+                  <div className="divide-y divide-[#1A1A1A]">
+                    {odStudents.map((student) => (
+                      <div key={student.id} className="py-3 px-2 hover:bg-[#121212] rounded-lg transition">
+                        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+                          <div>
+                            <p className="text-xs font-bold text-white">
+                              {student.student_name}
+                            </p>
+                            <p className="text-[11px] text-[#888888] font-mono mt-0.5">
+                              {student.student_user_id}
+                              {student.department ? ` • ${student.department}` : ""}
+                            </p>
+                          </div>
 
-                      {/* STATUS */}
-                      <td className="px-6 py-4">
+                          <div className="sm:text-right text-xs">
+                            <span className="text-[#CCCCCC] font-medium">
+                              {formatDate(student.from_date)} → {formatDate(student.to_date)}
+                            </span>
+                            {(student.from_time || student.to_time) && (
+                              <p className="text-[10px] text-[#777777]">
+                                {formatTime(student.from_time)} → {formatTime(student.to_time)}
+                              </p>
+                            )}
+                          </div>
+                        </div>
 
-                        <span className="
-                          inline-flex
-                          items-center
-                          gap-2
-                          px-3
-                          py-1.5
-                          rounded-full
-                          text-xs
-                          font-semibold
-                          bg-[#17130A]
-                          text-[#D4AF37]
-                          border
-                          border-[#3D3318]
-                        ">
-
-                          <span className="
-                            w-1.5
-                            h-1.5
-                            rounded-full
-                            bg-[#D4AF37]
-                          "></span>
-
-                          {request.status}
-
-                        </span>
-
-                      </td>
-
-                    </tr>
-
-                  ))}
-
-                </tbody>
-
-              </table>
-
+                        {(student.activity_name || student.reason) && (
+                          <p className="text-[11px] text-[#888888] mt-2 bg-[#080808] p-2 rounded border border-[#1C1C1C]">
+                            <strong className="text-[#AAAAAA]">Activity:</strong> {student.activity_name || student.reason}
+                          </p>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
             </div>
 
           </div>
-
-        </section>
+        </div>
 
       </main>
 
-      {/* ================= FOOTER ================= */}
-      <footer className="
-        mt-12
-        bg-[#080808]
-        border-t
-        border-[#292929]
-      ">
-
-        <div className="
-          max-w-7xl
-          mx-auto
-          px-4
-          sm:px-6
-          py-5
-        ">
-
-          <div className="
-            flex
-            flex-col
-            sm:flex-row
-            items-center
-            justify-between
-            gap-3
-          ">
-
-            <p className="text-sm text-[#777777]">
-              © 2026 College Management Portal
-            </p>
-
-            <div className="flex items-center gap-2">
-
-              <span className="
-                w-1.5
-                h-1.5
-                rounded-full
-                bg-[#D4AF37]
-              "></span>
-
-              <p className="text-sm text-[#777777]">
-                Teacher Portal
-              </p>
-
-            </div>
-
-          </div>
-
-        </div>
-
-      </footer>
-
+      <Footer />
     </div>
   );
 }

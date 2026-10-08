@@ -1,14 +1,86 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
+import Sidebar from "../components/Sidebar";
+import Footer from "../components/Footer";
+import PageHeader from "../components/PageHeader";
+import StatusBadge from "../components/StatusBadge";
+import EmptyState from "../components/EmptyState";
+import LoadingState from "../components/LoadingState";
 
 function MyRequests() {
   const [requests, setRequests] = useState([]);
+  const [loading, setLoading] = useState(true);
 
-  const loadRequests = () => {
-    const storedRequests =
-      JSON.parse(localStorage.getItem("leaveODRequests")) || [];
+  const loadRequests = async () => {
+    setLoading(true);
+    let list = [];
 
-    setRequests(storedRequests);
+    // 1. Check localStorage first
+    try {
+      const stored = JSON.parse(localStorage.getItem("leaveODRequests")) || [];
+      if (Array.isArray(stored)) {
+        list = [...stored];
+      }
+    } catch {
+      // ignore
+    }
+
+    // 2. Fetch from API if token exists
+    const token =
+      localStorage.getItem("token") ||
+      localStorage.getItem("accessToken");
+
+    if (token) {
+      try {
+        const response = await fetch("http://localhost:5000/api/leave-od/my", {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+
+        if (response.ok) {
+          const data = await response.json();
+
+          if (data?.requests && Array.isArray(data.requests)) {
+            const apiItems = data.requests.map((r) => ({
+              id: r.request_id || r.id,
+              type: r.request_type === "LEAVE" ? "Leave" : "OD",
+              status: r.status,
+              fromDate: r.from_date
+                ? String(r.from_date).split("T")[0]
+                : "-",
+              fromTime: r.from_time || "",
+              toDate: r.to_date
+                ? String(r.to_date).split("T")[0]
+                : "-",
+              toTime: r.to_time || "",
+              submittedAt: r.created_at
+                ? new Date(r.created_at).toLocaleDateString()
+                : "-",
+              reason: r.reason,
+              reviewedAt: r.reviewed_at
+                ? new Date(r.reviewed_at).toLocaleDateString()
+                : null,
+            }));
+
+            const existingIds = new Set(
+              list.map((x) => String(x.id))
+            );
+
+            apiItems.forEach((item) => {
+              if (!existingIds.has(String(item.id))) {
+                list.push(item);
+              }
+            });
+          }
+        }
+      } catch {
+        // Fall back to localStorage
+      }
+    }
+
+    setRequests(list);
+    setLoading(false);
   };
 
   useEffect(() => {
@@ -25,439 +97,149 @@ function MyRequests() {
     };
   }, []);
 
-  const getStatusStyle = (status) => {
-    if (status === "Approved") {
-      return "bg-[#17130A] text-[#D4AF37] border-[#3D3318]";
-    }
-
-    if (status === "Rejected") {
-      return "bg-[#171010] text-[#E08A8A] border-[#422222]";
-    }
-
-    return "bg-[#111111] text-[#F2D675] border-[#333333]";
-  };
-
   return (
-    <div className="min-h-screen bg-[#050505] text-white">
-
-      {/* ================= HEADER ================= */}
-      <header className="bg-[#080808] border-b border-[#292929] px-6 sm:px-8 py-5">
-        <div className="
-          max-w-6xl
-          mx-auto
-          flex
-          flex-col
-          sm:flex-row
-          sm:items-center
-          sm:justify-between
-          gap-4
-        ">
-
-          <div>
-            <div className="flex items-center gap-2 mb-1">
-              <span className="w-2 h-2 rounded-full bg-[#D4AF37]"></span>
-
-              <p className="
-                text-xs
-                font-semibold
-                tracking-widest
-                text-[#D4AF37]
-                uppercase
-              ">
-                Student Services
-              </p>
-            </div>
-
-            <h1 className="text-2xl font-bold text-white">
-              My Requests
-            </h1>
-
-            <p className="text-[#B8B8B8] mt-1 text-sm">
-              Track your Leave and OD requests
-            </p>
-          </div>
-
+    <Sidebar role="student">
+      <main className="max-w-6xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-8 sm:py-10 flex-1">
+        <PageHeader
+          badge="Student Services"
+          title="My Requests"
+          description="Track active Leave of Absence and On-Duty permission requests, faculty decisions, and verification records."
+          backTo="/student"
+        >
           <Link
-            to="/student"
-            className="
-              inline-flex
-              items-center
-              justify-center
-              px-4
-              py-2.5
-              rounded-lg
-              bg-[#0D0D0D]
-              border
-              border-[#333333]
-              text-[#B8B8B8]
-              font-semibold
-              text-sm
-              hover:border-[#D4AF37]
-              hover:text-[#D4AF37]
-              transition
-            "
+            to="/student/leave-od"
+            className="inline-flex items-center justify-center px-4 py-2 rounded-lg bg-[#D4AF37] hover:bg-[#E5C158] text-[#050505] text-xs font-bold transition shadow-sm"
           >
-            Back to Dashboard
+            + New Request
           </Link>
+        </PageHeader>
 
-        </div>
-      </header>
-
-      {/* ================= CONTENT ================= */}
-      <main className="max-w-6xl mx-auto px-6 sm:px-8 py-10">
-
-        {requests.length === 0 ? (
-
-          /* ================= EMPTY STATE ================= */
-          <div className="
-            bg-[#0D0D0D]
-            rounded-2xl
-            border
-            border-[#292929]
-            shadow-xl
-            p-10
-            sm:p-14
-            text-center
-          ">
-
-            <div className="
-              mx-auto
-              w-16
-              h-16
-              rounded-2xl
-              bg-[#17130A]
-              border
-              border-[#3D3318]
-              flex
-              items-center
-              justify-center
-              text-3xl
-              mb-5
-            ">
-              📋
-            </div>
-
-            <h2 className="text-xl font-bold text-white">
-              No Requests Yet
-            </h2>
-
-            <p className="text-[#B8B8B8] mt-2 text-sm">
-              Your Leave and OD requests will appear here.
-            </p>
-
-            <Link
-              to="/student/leave-od"
-              className="
-                inline-block
-                mt-6
-                px-5
-                py-3
-                bg-[#D4AF37]
-                text-[#050505]
-                rounded-lg
-                font-semibold
-                hover:bg-[#F2D675]
-                transition
-              "
-            >
-              Apply for Leave / OD
-            </Link>
-
-          </div>
-
-        ) : (
-
-          /* ================= REQUEST LIST ================= */
-          <div className="space-y-5">
-
-            {requests.map((request) => (
-
-              <div
-                key={request.id}
-                className="
-                  bg-[#0D0D0D]
-                  rounded-2xl
-                  border
-                  border-[#292929]
-                  shadow-xl
-                  p-6
-                  hover:border-[#3D3318]
-                  transition
-                "
-              >
-
-                {/* ================= TOP ================= */}
-                <div className="
-                  flex
-                  flex-col
-                  sm:flex-row
-                  sm:justify-between
-                  gap-3
-                ">
-
-                  <div className="
-                    flex
-                    flex-wrap
-                    items-center
-                    gap-3
-                  ">
-
-                    <h2 className="text-xl font-bold text-white">
-                      {request.type} Request
-                    </h2>
-
-                    <span
-                      className={`
-                        px-3
-                        py-1
-                        rounded-full
-                        text-xs
-                        font-semibold
-                        border
-                        ${getStatusStyle(request.status)}
-                      `}
-                    >
-                      {request.status}
-                    </span>
-
-                  </div>
-
-                  <p className="
-                    text-xs
-                    text-[#666666]
-                    font-mono
-                  ">
-                    #{request.id}
-                  </p>
-
-                </div>
-
-                {/* ================= DETAILS ================= */}
-                <div className="
-                  grid
-                  md:grid-cols-3
-                  gap-4
-                  mt-6
-                ">
-
-                  {/* From Date */}
-                  <div className="
-                    bg-[#080808]
-                    border
-                    border-[#292929]
-                    rounded-xl
-                    p-4
-                  ">
-                    <p className="
-                      text-xs
-                      font-semibold
-                      text-[#D4AF37]
-                      uppercase
-                      tracking-wider
-                    ">
-                      From Date
-                    </p>
-
-                    <p className="
-                      text-sm
-                      font-medium
-                      text-white
-                      mt-2
-                    ">
-                      {request.fromDate}
-                    </p>
-                  </div>
-
-                  {/* To Date */}
-                  <div className="
-                    bg-[#080808]
-                    border
-                    border-[#292929]
-                    rounded-xl
-                    p-4
-                  ">
-                    <p className="
-                      text-xs
-                      font-semibold
-                      text-[#D4AF37]
-                      uppercase
-                      tracking-wider
-                    ">
-                      To Date
-                    </p>
-
-                    <p className="
-                      text-sm
-                      font-medium
-                      text-white
-                      mt-2
-                    ">
-                      {request.toDate}
-                    </p>
-                  </div>
-
-                  {/* Submitted */}
-                  <div className="
-                    bg-[#080808]
-                    border
-                    border-[#292929]
-                    rounded-xl
-                    p-4
-                  ">
-                    <p className="
-                      text-xs
-                      font-semibold
-                      text-[#D4AF37]
-                      uppercase
-                      tracking-wider
-                    ">
-                      Submitted
-                    </p>
-
-                    <p className="
-                      text-sm
-                      font-medium
-                      text-white
-                      mt-2
-                    ">
-                      {request.submittedAt}
-                    </p>
-                  </div>
-
-                </div>
-
-                {/* ================= REASON ================= */}
-                <div className="
-                  mt-5
-                  bg-[#080808]
-                  border
-                  border-[#292929]
-                  rounded-xl
-                  p-4
-                ">
-
-                  <p className="
-                    text-xs
-                    font-semibold
-                    text-[#D4AF37]
-                    uppercase
-                    tracking-wider
-                    mb-2
-                  ">
-                    Reason
-                  </p>
-
-                  <p className="
-                    text-sm
-                    text-[#D0D0D0]
-                    leading-6
-                  ">
-                    {request.reason}
-                  </p>
-
-                </div>
-
-                {/* ================= REVIEW INFORMATION ================= */}
-                {request.status !== "Pending" && (
-
-                  <div
-                    className={`
-                      mt-4
-                      rounded-xl
-                      p-4
-                      border
-                      ${
-                        request.status === "Approved"
-                          ? "bg-[#17130A] border-[#3D3318]"
-                          : "bg-[#171010] border-[#422222]"
-                      }
-                    `}
-                  >
-
-                    <p
-                      className={`
-                        text-sm
-                        font-semibold
-                        ${
-                          request.status === "Approved"
-                            ? "text-[#D4AF37]"
-                            : "text-[#E08A8A]"
-                        }
-                      `}
-                    >
-                      {request.status === "Approved"
-                        ? "✓ Your request has been approved."
-                        : "✕ Your request has been rejected."}
-                    </p>
-
-                    {request.reviewedAt && (
-                      <p className="
-                        text-xs
-                        text-[#777777]
-                        mt-2
-                      ">
-                        Reviewed: {request.reviewedAt}
-                      </p>
-                    )}
-
-                  </div>
-
-                )}
-
-              </div>
-
-            ))}
-
-          </div>
-
+        {loading && (
+          <LoadingState message="Loading your request history..." />
         )}
 
+        {!loading && requests.length === 0 && (
+          <EmptyState
+            icon="📋"
+            title="No Requests Yet"
+            message="You haven't submitted any Leave or On-Duty applications yet. Apply easily using the form."
+            actionText="Apply for Leave / OD"
+            actionLink="/student/leave-od"
+          />
+        )}
+
+        {!loading && requests.length > 0 && (
+          <div className="space-y-4">
+            {requests.map((request) => (
+              <div
+                key={request.id}
+                className="bg-[#0D0D0D] rounded-2xl border border-[#292929] hover:border-[#383838] transition p-6 shadow-sm"
+              >
+                {/* CARD HEADER */}
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 pb-4 border-b border-[#1A1A1A]">
+                  <div className="flex items-center gap-3">
+                    <span className="text-xs font-bold px-2.5 py-0.5 rounded bg-[#17130A] text-[#D4AF37] border border-[#3D3318]">
+                      {request.type || "Leave"}
+                    </span>
+
+                    <h2 className="text-base font-bold text-white tracking-tight">
+                      {request.type || "Leave"} Application
+                    </h2>
+
+                    <StatusBadge status={request.status} />
+                  </div>
+
+                  <span className="text-xs text-[#666666] font-mono">
+                    #{request.id}
+                  </span>
+                </div>
+
+                {/* TIMINGS GRID */}
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mt-4 text-xs">
+                  <div className="bg-[#080808] border border-[#222222] rounded-xl p-3">
+                    <p className="text-[10px] font-semibold text-[#888888] uppercase tracking-wider">
+                      From Date & Time
+                    </p>
+
+                    <p className="text-sm font-bold text-white mt-1">
+                      {request.fromDate}
+                      {request.fromTime
+                        ? ` • ${request.fromTime}`
+                        : ""}
+                    </p>
+                  </div>
+
+                  <div className="bg-[#080808] border border-[#222222] rounded-xl p-3">
+                    <p className="text-[10px] font-semibold text-[#888888] uppercase tracking-wider">
+                      To Date & Time
+                    </p>
+
+                    <p className="text-sm font-bold text-white mt-1">
+                      {request.toDate}
+                      {request.toTime
+                        ? ` • ${request.toTime}`
+                        : ""}
+                    </p>
+                  </div>
+
+                  <div className="bg-[#080808] border border-[#222222] rounded-xl p-3">
+                    <p className="text-[10px] font-semibold text-[#888888] uppercase tracking-wider">
+                      Date Submitted
+                    </p>
+
+                    <p className="text-sm font-medium text-[#CCCCCC] mt-1">
+                      {request.submittedAt || "Recent"}
+                    </p>
+                  </div>
+                </div>
+
+                {/* REASON BOX */}
+                <div className="mt-4 bg-[#080808] border border-[#222222] rounded-xl p-3.5">
+                  <p className="text-[10px] font-semibold text-[#888888] uppercase tracking-wider mb-1">
+                    Application Reason
+                  </p>
+
+                  <p className="text-xs text-[#CCCCCC] leading-relaxed">
+                    {request.reason || "No reason specified."}
+                  </p>
+                </div>
+
+                {/* REVIEW STATUS NOTICE */}
+                {String(request.status).toUpperCase() === "APPROVED" && (
+                  <div className="mt-4 p-3 rounded-xl bg-[#0B1B10] border border-[#1B3B24] text-xs text-[#4ADE80] flex items-center justify-between">
+                    <span>
+                      ✓ This request has been officially approved by faculty.
+                    </span>
+
+                    {request.reviewedAt && (
+                      <span className="text-[11px] text-[#6E9E7B]">
+                        Approved on {request.reviewedAt}
+                      </span>
+                    )}
+                  </div>
+                )}
+
+                {String(request.status).toUpperCase() === "REJECTED" && (
+                  <div className="mt-4 p-3 rounded-xl bg-[#1C0D0D] border border-[#3D1B1B] text-xs text-[#F87171] flex items-center justify-between">
+                    <span>
+                      ✕ This request was rejected by faculty.
+                    </span>
+
+                    {request.reviewedAt && (
+                      <span className="text-[11px] text-[#A66E6E]">
+                        Reviewed on {request.reviewedAt}
+                      </span>
+                    )}
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+        )}
       </main>
 
-      {/* ================= FOOTER ================= */}
-      <footer className="
-        mt-6
-        border-t
-        border-[#292929]
-        bg-[#080808]
-      ">
-        <div className="
-          max-w-6xl
-          mx-auto
-          px-6
-          sm:px-8
-          py-5
-          flex
-          flex-col
-          sm:flex-row
-          items-center
-          justify-between
-          gap-2
-        ">
-
-          <p className="text-xs text-[#666666]">
-            College Workflow System
-          </p>
-
-          <div className="flex items-center gap-2">
-
-            <span className="
-              w-1.5
-              h-1.5
-              rounded-full
-              bg-[#D4AF37]
-            "></span>
-
-            <p className="text-xs text-[#777777]">
-              Student Services
-            </p>
-
-          </div>
-
-        </div>
-      </footer>
-
-    </div>
+      <Footer />
+    </Sidebar>
   );
 }
 

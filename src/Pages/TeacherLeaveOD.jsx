@@ -1,720 +1,314 @@
 import { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
+import Navbar from "../components/Navbar";
+import Footer from "../components/Footer";
+import PageHeader from "../components/PageHeader";
+import StatusBadge from "../components/StatusBadge";
+import EmptyState from "../components/EmptyState";
+import LoadingState from "../components/LoadingState";
 
 function TeacherLeaveOD() {
   const [requests, setRequests] = useState([]);
+  const [message, setMessage] = useState("");
+  const [loading, setLoading] = useState(true);
+  const [updating, setUpdating] = useState(false);
 
-  const loadRequests = () => {
-    const storedRequests =
-      JSON.parse(localStorage.getItem("leaveODRequests")) || [];
+  const getToken = () => {
+    return (
+      localStorage.getItem("token") ||
+      localStorage.getItem("accessToken")
+    );
+  };
 
-    setRequests(storedRequests);
+  const loadRequests = async () => {
+    try {
+      setLoading(true);
+      setMessage("");
+
+      const token = getToken();
+
+      if (!token) {
+        setMessage("Session expired. Please login again.");
+        return;
+      }
+
+      const response = await fetch(
+        "http://localhost:5000/api/leave-od/pending",
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message || "Failed to load requests");
+      }
+
+      setRequests(data.requests || []);
+    } catch (error) {
+      console.error("Load Leave/OD error:", error);
+      setMessage(error.message || "Failed to load requests.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   useEffect(() => {
     loadRequests();
   }, []);
 
-  const updateStatus = (id, status) => {
-    const updatedRequests = requests.map((request) =>
-      request.id === id
-        ? {
-            ...request,
+  const updateStatus = async (id, status) => {
+    try {
+      setUpdating(true);
+      setMessage("");
+
+      const token = getToken();
+
+      if (!token) {
+        setMessage("Session expired. Please login again.");
+        return;
+      }
+
+      const response = await fetch(
+        `http://localhost:5000/api/leave-od/${id}/status`,
+        {
+          method: "PATCH",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({
             status,
-            reviewedAt: new Date().toLocaleString(),
-          }
-        : request
-    );
+          }),
+        }
+      );
 
-    localStorage.setItem(
-      "leaveODRequests",
-      JSON.stringify(updatedRequests)
-    );
+      const data = await response.json();
 
-    setRequests(updatedRequests);
+      if (!response.ok) {
+        throw new Error(data.message || "Failed to update request");
+      }
+
+      await loadRequests();
+
+      setMessage(
+        status === "APPROVED"
+          ? "Request approved successfully."
+          : "Request rejected successfully."
+      );
+    } catch (error) {
+      console.error("Update Leave/OD error:", error);
+      setMessage(error.message || "Failed to update request.");
+    } finally {
+      setUpdating(false);
+    }
   };
 
-  const pending = requests.filter(
-    (request) => request.status === "Pending"
-  );
-
-  const approved = requests.filter(
-    (request) => request.status === "Approved"
-  );
-
-  const rejected = requests.filter(
-    (request) => request.status === "Rejected"
-  );
+  const pending = requests.filter((r) => r.status === "PENDING");
+  const approved = requests.filter((r) => r.status === "APPROVED");
+  const rejected = requests.filter((r) => r.status === "REJECTED");
 
   return (
     <div className="min-h-screen bg-[#050505] text-white flex flex-col">
+      <Navbar role="teacher" />
 
-      {/* ================= HEADER ================= */}
-      <header className="bg-[#050505] border-b border-[#292929]">
-        <div className="
-          max-w-7xl
-          mx-auto
-          px-6
-          sm:px-8
-          py-5
-          flex
-          flex-col
-          sm:flex-row
-          sm:items-center
-          sm:justify-between
-          gap-4
-        ">
+      <main className="max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-8 sm:py-10 flex-1">
+        
+        <PageHeader
+          badge="Faculty Portal"
+          title="Leave / OD Requests"
+          description="Process incoming student applications for official leave of absence and external on-duty attendance."
+          backTo="/teacher"
+        />
 
-          <div>
-
-            <div className="flex items-center gap-2 mb-1">
-
-              <span className="
-                w-2
-                h-2
-                rounded-full
-                bg-[#D4AF37]
-              "></span>
-
-              <p className="
-                text-xs
-                font-semibold
-                tracking-widest
-                text-[#D4AF37]
-                uppercase
-              ">
-                Faculty Portal
-              </p>
-
-            </div>
-
-            <h1 className="
-              text-2xl
-              font-bold
-              text-white
-            ">
-              Leave / OD Requests
-            </h1>
-
-            <p className="
-              text-[#B8B8B8]
-              text-sm
-              mt-1
-            ">
-              Review and manage student requests
-            </p>
-
+        {/* FEEDBACK NOTIFICATION */}
+        {message && (
+          <div className="mb-6 p-4 rounded-xl bg-[#17130A] border border-[#3D3318] text-[#D4AF37] text-xs flex items-start gap-2.5">
+            <span className="w-1.5 h-1.5 rounded-full bg-[#D4AF37] mt-1 shrink-0" />
+            <span className="leading-relaxed">{message}</span>
           </div>
+        )}
 
-          <Link
-            to="/teacher"
-            className="
-              inline-flex
-              items-center
-              justify-center
-              px-4
-              py-2.5
-              rounded-lg
-              bg-[#0D0D0D]
-              border
-              border-[#333333]
-              text-[#B8B8B8]
-              text-sm
-              font-semibold
-              hover:border-[#D4AF37]
-              hover:text-[#D4AF37]
-              transition
-            "
-          >
-            Back to Dashboard
-          </Link>
-
-        </div>
-      </header>
-
-      {/* ================= MAIN ================= */}
-      <main className="
-        max-w-7xl
-        mx-auto
-        w-full
-        px-6
-        sm:px-8
-        py-10
-        flex-1
-      ">
-
-        {/* ================= SUMMARY ================= */}
-        <div className="
-          grid
-          md:grid-cols-3
-          gap-5
-          mb-8
-        ">
-
-          {/* PENDING */}
-          <div className="
-            bg-[#0D0D0D]
-            border
-            border-[#292929]
-            rounded-2xl
-            p-6
-            hover:border-[#3D3318]
-            transition
-          ">
-
-            <div className="
-              flex
-              items-center
-              justify-between
-              gap-4
-            ">
-
-              <div>
-
-                <p className="
-                  text-sm
-                  text-[#888888]
-                ">
-                  Pending
-                </p>
-
-                <h2 className="
-                  text-3xl
-                  font-bold
-                  text-[#F2D675]
-                  mt-2
-                ">
-                  {pending.length}
-                </h2>
-
-              </div>
-
-              <div className="
-                w-11
-                h-11
-                rounded-xl
-                bg-[#17130A]
-                border
-                border-[#3D3318]
-                flex
-                items-center
-                justify-center
-                text-lg
-              ">
-                ⏳
-              </div>
-
-            </div>
-
-          </div>
-
-          {/* APPROVED */}
-          <div className="
-            bg-[#0D0D0D]
-            border
-            border-[#292929]
-            rounded-2xl
-            p-6
-            hover:border-[#3D3318]
-            transition
-          ">
-
-            <div className="
-              flex
-              items-center
-              justify-between
-              gap-4
-            ">
-
-              <div>
-
-                <p className="
-                  text-sm
-                  text-[#888888]
-                ">
-                  Approved
-                </p>
-
-                <h2 className="
-                  text-3xl
-                  font-bold
-                  text-[#D4AF37]
-                  mt-2
-                ">
-                  {approved.length}
-                </h2>
-
-              </div>
-
-              <div className="
-                w-11
-                h-11
-                rounded-xl
-                bg-[#17130A]
-                border
-                border-[#3D3318]
-                flex
-                items-center
-                justify-center
-                text-lg
-              ">
-                ✓
-              </div>
-
-            </div>
-
-          </div>
-
-          {/* REJECTED */}
-          <div className="
-            bg-[#0D0D0D]
-            border
-            border-[#292929]
-            rounded-2xl
-            p-6
-            hover:border-[#422222]
-            transition
-          ">
-
-            <div className="
-              flex
-              items-center
-              justify-between
-              gap-4
-            ">
-
-              <div>
-
-                <p className="
-                  text-sm
-                  text-[#888888]
-                ">
-                  Rejected
-                </p>
-
-                <h2 className="
-                  text-3xl
-                  font-bold
-                  text-[#E08A8A]
-                  mt-2
-                ">
-                  {rejected.length}
-                </h2>
-
-              </div>
-
-              <div className="
-                w-11
-                h-11
-                rounded-xl
-                bg-[#171010]
-                border
-                border-[#422222]
-                flex
-                items-center
-                justify-center
-                text-lg
-              ">
-                ✕
-              </div>
-
-            </div>
-
-          </div>
-
-        </div>
-
-        {/* ================= REQUESTS ================= */}
-        <div className="
-          bg-[#0D0D0D]
-          border
-          border-[#292929]
-          rounded-2xl
-          shadow-xl
-          p-6
-        ">
-
-          <div className="
-            flex
-            items-center
-            gap-4
-            mb-6
-            pb-6
-            border-b
-            border-[#292929]
-          ">
-
-            <div className="
-              w-11
-              h-11
-              rounded-xl
-              bg-[#17130A]
-              border
-              border-[#3D3318]
-              flex
-              items-center
-              justify-center
-              text-lg
-            ">
-              📋
-            </div>
-
+        {/* METRICS ROW */}
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
+          <div className="bg-[#0D0D0D] border border-[#292929] rounded-2xl p-5 flex items-center justify-between">
             <div>
-
-              <h2 className="
-                text-xl
-                font-bold
-                text-white
-              ">
-                Student Requests
-              </h2>
-
-              <p className="
-                text-sm
-                text-[#888888]
-                mt-1
-              ">
-                Review submitted Leave and OD applications
+              <p className="text-xs font-semibold text-[#888888] uppercase tracking-wider">
+                Pending Approval
               </p>
-
+              <p className="text-2xl sm:text-3xl font-black text-[#D4AF37] mt-1">
+                {pending.length}
+              </p>
             </div>
-
+            <div className="w-10 h-10 rounded-xl bg-[#17130A] border border-[#3D3318] flex items-center justify-center text-lg text-[#D4AF37]">
+              ⏳
+            </div>
           </div>
 
-          {requests.length === 0 ? (
-
-            /* ================= EMPTY STATE ================= */
-            <div className="
-              text-center
-              py-12
-            ">
-
-              <div className="
-                mx-auto
-                w-16
-                h-16
-                rounded-2xl
-                bg-[#17130A]
-                border
-                border-[#3D3318]
-                flex
-                items-center
-                justify-center
-                text-3xl
-                mb-4
-              ">
-                📋
-              </div>
-
-              <h3 className="
-                text-lg
-                font-semibold
-                text-white
-              ">
-                No Requests
-              </h3>
-
-              <p className="
-                text-[#888888]
-                mt-1
-                text-sm
-              ">
-                Student Leave / OD requests will appear here.
+          <div className="bg-[#0D0D0D] border border-[#292929] rounded-2xl p-5 flex items-center justify-between">
+            <div>
+              <p className="text-xs font-semibold text-[#888888] uppercase tracking-wider">
+                Approved
               </p>
-
+              <p className="text-2xl sm:text-3xl font-black text-[#4ADE80] mt-1">
+                {approved.length}
+              </p>
             </div>
+            <div className="w-10 h-10 rounded-xl bg-[#0B1B10] border border-[#1B3B24] flex items-center justify-center text-lg text-[#4ADE80]">
+              ✓
+            </div>
+          </div>
 
-          ) : (
+          <div className="bg-[#0D0D0D] border border-[#292929] rounded-2xl p-5 flex items-center justify-between">
+            <div>
+              <p className="text-xs font-semibold text-[#888888] uppercase tracking-wider">
+                Rejected
+              </p>
+              <p className="text-2xl sm:text-3xl font-black text-[#F87171] mt-1">
+                {rejected.length}
+              </p>
+            </div>
+            <div className="w-10 h-10 rounded-xl bg-[#1C0D0D] border border-[#3D1B1B] flex items-center justify-center text-lg text-[#F87171]">
+              ✕
+            </div>
+          </div>
+        </div>
 
-            <div className="space-y-5">
+        {/* LOADING */}
+        {loading && <LoadingState message="Fetching student Leave/OD requests..." />}
 
-              {requests.map((request) => (
+        {/* EMPTY STATE */}
+        {!loading && requests.length === 0 && (
+          <EmptyState
+            icon="📋"
+            title="No Pending Applications"
+            message="There are currently no Leave or OD requests awaiting your review."
+          />
+        )}
 
-                <div
-                  key={request.id}
-                  className="
-                    border
-                    border-[#292929]
-                    rounded-xl
-                    p-5
-                    bg-[#080808]
-                    hover:border-[#3D3318]
-                    transition
-                  "
-                >
-
-                  <div className="
-                    flex
-                    flex-col
-                    lg:flex-row
-                    lg:justify-between
-                    gap-5
-                  ">
-
-                    {/* ================= REQUEST DETAILS ================= */}
-                    <div className="flex-1">
-
-                      {/* Student + Type + Status */}
-                      <div className="
-                        flex
-                        flex-wrap
-                        items-center
-                        gap-3
-                        mb-4
-                      ">
-
-                        <h3 className="
-                          font-bold
-                          text-lg
-                          text-white
-                        ">
-                          {request.student}
-                        </h3>
-
-                        <span
-                          className={`
-                            px-3
-                            py-1
-                            rounded-full
-                            text-xs
-                            font-semibold
-                            border
-                            ${
-                              request.type === "Leave"
-                                ? "bg-[#17130A] text-[#D4AF37] border-[#3D3318]"
-                                : "bg-[#111111] text-[#F2D675] border-[#333333]"
-                            }
-                          `}
-                        >
-                          {request.type}
-                        </span>
-
-                        <span
-                          className={`
-                            px-3
-                            py-1
-                            rounded-full
-                            text-xs
-                            font-semibold
-                            border
-                            ${
-                              request.status === "Pending"
-                                ? "bg-[#111111] text-[#F2D675] border-[#333333]"
-                                : request.status === "Approved"
-                                ? "bg-[#17130A] text-[#D4AF37] border-[#3D3318]"
-                                : "bg-[#171010] text-[#E08A8A] border-[#422222]"
-                            }
-                          `}
-                        >
-                          {request.status}
-                        </span>
-
-                      </div>
-
-                      {/* Details */}
-                      <div className="
-                        grid
-                        md:grid-cols-2
-                        gap-3
-                        text-sm
-                      ">
-
-                        <p className="text-[#888888]">
-                          <strong className="text-[#D0D0D0]">
-                            Register No:
-                          </strong>{" "}
-                          {request.registerNo}
-                        </p>
-
-                        <p className="text-[#888888]">
-                          <strong className="text-[#D0D0D0]">
-                            From:
-                          </strong>{" "}
-                          {request.fromDate}
-                        </p>
-
-                        <p className="text-[#888888]">
-                          <strong className="text-[#D0D0D0]">
-                            To:
-                          </strong>{" "}
-                          {request.toDate}
-                        </p>
-
-                        <p className="text-[#888888]">
-                          <strong className="text-[#D0D0D0]">
-                            Submitted:
-                          </strong>{" "}
-                          {request.submittedAt}
-                        </p>
-
-                      </div>
-
-                      {/* Reason */}
-                      <div className="
-                        mt-4
-                        bg-[#0D0D0D]
-                        border
-                        border-[#292929]
-                        rounded-xl
-                        p-4
-                      ">
-
-                        <p className="
-                          text-xs
-                          font-semibold
-                          text-[#D4AF37]
-                          tracking-wider
-                          mb-2
-                        ">
-                          REASON
-                        </p>
-
-                        <p className="
-                          text-sm
-                          text-[#D0D0D0]
-                          leading-6
-                        ">
-                          {request.reason}
-                        </p>
-
-                      </div>
-
-                      {/* Reviewed At */}
-                      {request.reviewedAt && (
-                        <p className="
-                          text-xs
-                          text-[#666666]
-                          mt-3
-                        ">
-                          Reviewed: {request.reviewedAt}
-                        </p>
-                      )}
-
+        {/* REQUESTS LIST */}
+        {!loading && requests.length > 0 && (
+          <div className="space-y-4">
+            {requests.map((request) => (
+              <div
+                key={request.id}
+                className="bg-[#0D0D0D] border border-[#292929] hover:border-[#383838] transition rounded-2xl p-6 shadow-sm"
+              >
+                <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-6">
+                  
+                  {/* DETAILS */}
+                  <div className="flex-1 min-w-0">
+                    <div className="flex flex-wrap items-center gap-2 mb-2">
+                      <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded bg-[#17130A] border border-[#3D3318] text-[#D4AF37]">
+                        {request.request_type}
+                      </span>
+                      <StatusBadge status={request.status} />
                     </div>
 
-                    {/* ================= ACTIONS ================= */}
-                    {request.status === "Pending" && (
-                      <div className="
-                        flex
-                        lg:flex-col
-                        gap-3
-                        justify-center
-                        lg:min-w-[145px]
-                      ">
+                    <h2 className="text-lg font-bold text-white tracking-tight">
+                      {request.student_name}
+                    </h2>
 
-                        <button
-                          onClick={() =>
-                            updateStatus(request.id, "Approved")
-                          }
-                          className="
-                            flex-1
-                            lg:flex-none
-                            px-5
-                            py-2.5
-                            rounded-lg
-                            bg-[#D4AF37]
-                            text-[#050505]
-                            text-sm
-                            font-semibold
-                            hover:bg-[#F2D675]
-                            transition
-                            whitespace-nowrap
-                          "
-                        >
-                          ✓ Approve
-                        </button>
+                    {/* METADATA GRID */}
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 mt-3 text-xs">
+                      <div className="bg-[#080808] p-2.5 rounded-lg border border-[#1F1F1F]">
+                        <span className="text-[10px] text-[#888888] uppercase block">Register No</span>
+                        <span className="font-mono text-white truncate block">
+                          {request.student_user_id || "N/A"}
+                        </span>
+                      </div>
 
-                        <button
-                          onClick={() =>
-                            updateStatus(request.id, "Rejected")
-                          }
-                          className="
-                            flex-1
-                            lg:flex-none
-                            px-5
-                            py-2.5
-                            rounded-lg
-                            bg-[#171010]
-                            border
-                            border-[#422222]
-                            text-[#E08A8A]
-                            text-sm
-                            font-semibold
-                            hover:bg-[#211313]
-                            transition
-                            whitespace-nowrap
-                          "
-                        >
-                          ✕ Reject
-                        </button>
+                      <div className="bg-[#080808] p-2.5 rounded-lg border border-[#1F1F1F]">
+                        <span className="text-[10px] text-[#888888] uppercase block">Department</span>
+                        <span className="text-white truncate block">
+                          {request.department || "General"}
+                        </span>
+                      </div>
 
+                      <div className="bg-[#080808] p-2.5 rounded-lg border border-[#1F1F1F]">
+                        <span className="text-[10px] text-[#888888] uppercase block">From</span>
+                        <span className="text-[#CCCCCC] truncate block">
+                          {request.from_date} {request.from_time ? `(${request.from_time})` : ""}
+                        </span>
+                      </div>
+
+                      <div className="bg-[#080808] p-2.5 rounded-lg border border-[#1F1F1F]">
+                        <span className="text-[10px] text-[#888888] uppercase block">To</span>
+                        <span className="text-[#CCCCCC] truncate block">
+                          {request.to_date} {request.to_time ? `(${request.to_time})` : ""}
+                        </span>
+                      </div>
+                    </div>
+
+                    {(request.leave_type || request.od_type || request.activity_name) && (
+                      <div className="mt-3 flex flex-wrap gap-2 text-xs">
+                        {request.leave_type && (
+                          <span className="px-2 py-0.5 rounded bg-[#141414] border border-[#222222] text-[#B8B8B8]">
+                            Type: <strong className="text-white">{request.leave_type}</strong>
+                          </span>
+                        )}
+                        {request.od_type && (
+                          <span className="px-2 py-0.5 rounded bg-[#141414] border border-[#222222] text-[#B8B8B8]">
+                            OD Category: <strong className="text-white">{request.od_type}</strong>
+                          </span>
+                        )}
+                        {request.activity_name && (
+                          <span className="px-2 py-0.5 rounded bg-[#141414] border border-[#222222] text-[#B8B8B8]">
+                            Activity: <strong className="text-white">{request.activity_name}</strong>
+                          </span>
+                        )}
                       </div>
                     )}
 
+                    {/* REASON */}
+                    <div className="mt-3.5 bg-[#080808] border border-[#222222] rounded-xl p-3.5">
+                      <p className="text-[10px] font-semibold text-[#777777] uppercase tracking-wider mb-1">
+                        Application Reason
+                      </p>
+                      <p className="text-xs text-[#CCCCCC] leading-relaxed whitespace-pre-wrap">
+                        {request.reason || "No reason provided."}
+                      </p>
+                    </div>
+
+                    <p className="text-[10px] text-[#666666] mt-2 font-mono">
+                      Submitted on: {request.created_at ? new Date(request.created_at).toLocaleString() : "-"}
+                    </p>
                   </div>
 
+                  {/* ACTION BUTTONS (DISTINCT APPROVE & REJECT) */}
+                  {request.status === "PENDING" && (
+                    <div className="shrink-0 flex sm:flex-row lg:flex-col gap-2.5 pt-2 lg:pt-0 w-full sm:w-auto lg:w-36">
+                      <button
+                        type="button"
+                        disabled={updating}
+                        onClick={() => updateStatus(request.id, "APPROVED")}
+                        className="flex-1 lg:flex-none py-2.5 px-4 rounded-xl bg-[#D4AF37] hover:bg-[#E5C158] disabled:opacity-50 disabled:cursor-not-allowed text-[#050505] text-xs font-bold transition shadow-sm text-center"
+                      >
+                        ✓ Approve
+                      </button>
+
+                      <button
+                        type="button"
+                        disabled={updating}
+                        onClick={() => updateStatus(request.id, "REJECTED")}
+                        className="flex-1 lg:flex-none py-2.5 px-4 rounded-xl bg-[#1C0D0D] border border-[#3D1B1B] hover:bg-[#2B1313] hover:border-[#5A2525] disabled:opacity-50 disabled:cursor-not-allowed text-[#F87171] text-xs font-semibold transition text-center"
+                      >
+                        ✕ Reject
+                      </button>
+                    </div>
+                  )}
+
                 </div>
-
-              ))}
-
-            </div>
-
-          )}
-
-        </div>
+              </div>
+            ))}
+          </div>
+        )}
 
       </main>
 
-      {/* ================= FOOTER ================= */}
-      <footer className="
-        bg-[#080808]
-        border-t
-        border-[#292929]
-      ">
-
-        <div className="
-          max-w-7xl
-          mx-auto
-          px-6
-          sm:px-8
-          py-5
-          flex
-          flex-col
-          sm:flex-row
-          items-center
-          justify-between
-          gap-2
-        ">
-
-          <p className="
-            text-xs
-            text-[#666666]
-          ">
-            College Workflow System
-          </p>
-
-          <div className="flex items-center gap-2">
-
-            <span className="
-              w-1.5
-              h-1.5
-              rounded-full
-              bg-[#D4AF37]
-            "></span>
-
-            <p className="
-              text-xs
-              text-[#777777]
-            ">
-              Faculty Services
-            </p>
-
-          </div>
-
-        </div>
-
-      </footer>
-
+      <Footer />
     </div>
   );
 }
