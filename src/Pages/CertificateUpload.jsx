@@ -2,283 +2,441 @@ import { useState } from "react";
 import { Link } from "react-router-dom";
 
 function CertificateUpload() {
-  const [certificateType, setCertificateType] = useState("");
   const [certificateName, setCertificateName] = useState("");
-  const [file, setFile] = useState(null);
-  const [submitted, setSubmitted] = useState(false);
+  const [certificateFile, setCertificateFile] = useState(null);
+  const [message, setMessage] = useState("");
 
   const handleSubmit = (e) => {
     e.preventDefault();
 
-    if (!file) {
+    if (!certificateName || !certificateFile) {
+      setMessage(
+        "Please enter the certificate name and upload the certificate."
+      );
       return;
     }
 
-    setSubmitted(true);
+    const existingCertificates =
+      JSON.parse(localStorage.getItem("certificates")) || [];
+
+    const reader = new FileReader();
+
+    reader.onload = () => {
+      const newCertificate = {
+        id: Date.now(),
+        student: "Midhun K",
+        registerNo: "AI2025",
+        certificateName,
+        fileName: certificateFile.name,
+        fileData: reader.result,
+        status: "Pending",
+        uploadedAt: new Date().toLocaleString(),
+        remarks: "",
+      };
+
+      localStorage.setItem(
+        "certificates",
+        JSON.stringify([
+          ...existingCertificates,
+          newCertificate,
+        ])
+      );
+
+      setCertificateName("");
+      setCertificateFile(null);
+      setMessage("Certificate uploaded successfully!");
+
+      document.getElementById("certificateFile").value = "";
+    };
+
+    reader.readAsDataURL(certificateFile);
   };
 
-  if (submitted) {
-    return (
-      <div className="min-h-screen bg-slate-100">
-
-        <nav className="bg-white border-b border-slate-200 px-6 py-4">
-          <div className="max-w-5xl mx-auto">
-            <h1 className="text-xl font-bold text-slate-800">
-              College Workflow
-            </h1>
-
-            <p className="text-xs text-slate-500">
-              Student Portal
-            </p>
-          </div>
-        </nav>
-
-        <main className="max-w-3xl mx-auto px-6 py-10">
-
-          <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-8 text-center">
-
-            <div className="mx-auto w-16 h-16 bg-green-100 rounded-full flex items-center justify-center text-3xl">
-              ✓
-            </div>
-
-            <h2 className="text-2xl font-bold text-slate-800 mt-5">
-              Certificate Submitted
-            </h2>
-
-            <p className="text-slate-500 mt-2">
-              Your certificate has been submitted for teacher verification.
-            </p>
-
-            <div className="mt-6 bg-slate-50 rounded-xl p-5 text-left">
-
-              <div className="flex justify-between mb-3">
-                <span className="text-sm text-slate-500">
-                  Certificate
-                </span>
-
-                <span className="font-semibold text-slate-800">
-                  {certificateName}
-                </span>
-              </div>
-
-              <div className="flex justify-between mb-3">
-                <span className="text-sm text-slate-500">
-                  File
-                </span>
-
-                <span className="font-semibold text-slate-800">
-                  {file.name}
-                </span>
-              </div>
-
-              <div className="flex justify-between">
-                <span className="text-sm text-slate-500">
-                  Status
-                </span>
-
-                <span className="text-sm font-semibold text-yellow-600">
-                  Verification Pending
-                </span>
-              </div>
-
-            </div>
-
-            <div className="mt-6 flex gap-3 justify-center">
-
-              <Link
-                to="/student"
-                className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-medium transition"
-              >
-                Back to Dashboard
-              </Link>
-
-              <button
-                onClick={() => {
-                  setSubmitted(false);
-                  setCertificateType("");
-                  setCertificateName("");
-                  setFile(null);
-                }}
-                className="border border-slate-300 hover:bg-slate-50 text-slate-700 px-6 py-3 rounded-lg font-medium transition"
-              >
-                Upload Another
-              </button>
-
-            </div>
-
-          </div>
-
-        </main>
-      </div>
-    );
-  }
-
   return (
-    <div className="min-h-screen bg-slate-100">
+    <div className="min-h-screen bg-[#050505] text-white">
 
-      {/* Navbar */}
+      {/* ================= HEADER ================= */}
+      <header className="
+        bg-[#080808]
+        border-b
+        border-[#292929]
+        px-6
+        sm:px-8
+        py-5
+      ">
 
-      <nav className="bg-white border-b border-slate-200 px-6 py-4">
+        <div className="
+          max-w-6xl
+          mx-auto
+          flex
+          flex-col
+          sm:flex-row
+          sm:items-center
+          sm:justify-between
+          gap-4
+        ">
 
-        <div className="max-w-5xl mx-auto flex items-center justify-between">
-
+          {/* TITLE */}
           <div>
-            <h1 className="text-xl font-bold text-slate-800">
-              College Workflow
+
+            <div className="flex items-center gap-2 mb-2">
+
+              <span className="
+                w-2
+                h-2
+                rounded-full
+                bg-[#D4AF37]
+              "></span>
+
+              <span className="
+                text-xs
+                font-semibold
+                tracking-wider
+                text-[#D4AF37]
+                uppercase
+              ">
+                Student Services
+              </span>
+
+            </div>
+
+            <h1 className="text-2xl font-bold text-white">
+              Upload Certificate
             </h1>
 
-            <p className="text-xs text-slate-500">
-              Student Portal
+            <p className="text-sm text-[#B8B8B8] mt-1">
+              Upload your certificate for teacher verification
             </p>
+
           </div>
 
+          {/* DASHBOARD */}
           <Link
             to="/student"
-            className="text-sm text-blue-600 font-medium hover:text-blue-700"
+            className="
+              inline-flex
+              items-center
+              justify-center
+              px-4
+              py-2
+              rounded-lg
+              bg-[#0D0D0D]
+              border
+              border-[#292929]
+              text-white
+              text-sm
+              font-medium
+              hover:border-[#D4AF37]
+              hover:text-[#D4AF37]
+              transition
+              duration-200
+            "
           >
-            ← Dashboard
+            ← Back to Dashboard
           </Link>
 
         </div>
 
-      </nav>
+      </header>
 
-      {/* Main */}
+      {/* ================= CONTENT ================= */}
+      <main className="max-w-2xl mx-auto px-6 py-10">
 
-      <main className="max-w-3xl mx-auto px-6 py-8">
+        {/* FORM CARD */}
+        <div className="
+          bg-[#0D0D0D]
+          rounded-2xl
+          border
+          border-[#292929]
+          shadow-xl
+          p-6
+          sm:p-8
+        ">
 
-        <div className="mb-7">
+          {/* CARD HEADER */}
+          <div className="mb-7">
 
-          <h2 className="text-3xl font-bold text-slate-800">
-            Certificate Upload
-          </h2>
+            <div className="
+              w-11
+              h-11
+              rounded-lg
+              bg-[#17130A]
+              border
+              border-[#3D3318]
+              flex
+              items-center
+              justify-center
+              text-xl
+              mb-4
+            ">
+              📜
+            </div>
 
-          <p className="text-slate-500 mt-2">
-            Upload your certificate for verification by the responsible teacher.
-          </p>
+            <h2 className="text-xl font-bold text-white">
+              Certificate Details
+            </h2>
 
-        </div>
-
-        <form
-          onSubmit={handleSubmit}
-          className="bg-white rounded-2xl shadow-sm border border-slate-200 p-7 space-y-6"
-        >
-
-          {/* Certificate Type */}
-
-          <div>
-
-            <label className="block text-sm font-semibold text-slate-700 mb-2">
-              Certificate Type
-            </label>
-
-            <select
-              value={certificateType}
-              onChange={(e) => {
-                setCertificateType(e.target.value);
-                setCertificateName(e.target.options[e.target.selectedIndex].text);
-              }}
-              required
-              className="w-full px-4 py-3 border border-slate-300 rounded-lg outline-none focus:ring-2 focus:ring-blue-500"
-            >
-
-              <option value="">
-                Select certificate type
-              </option>
-
-              <option value="Participation">
-                Participation Certificate
-              </option>
-
-              <option value="Workshop">
-                Workshop Certificate
-              </option>
-
-              <option value="Internship">
-                Internship Certificate
-              </option>
-
-              <option value="Competition">
-                Competition Certificate
-              </option>
-
-              <option value="Hackathon">
-                Hackathon Certificate
-              </option>
-
-              <option value="Other">
-                Other
-              </option>
-
-            </select>
+            <p className="text-sm text-[#B8B8B8] mt-1">
+              Provide the certificate information and upload the document.
+            </p>
 
           </div>
 
-          {/* File Upload */}
+          {/* MESSAGE */}
+          {message && (
+            <div className={`
+              mb-6
+              p-4
+              rounded-lg
+              border
+              text-sm
+              ${
+                message.includes("successfully")
+                  ? "bg-[#17130A] border-[#3D3318] text-[#D4AF37]"
+                  : "bg-[#17130A] border-[#3D3318] text-[#F2D675]"
+              }
+            `}>
 
-          <div>
+              <div className="flex items-start gap-3">
 
-            <label className="block text-sm font-semibold text-slate-700 mb-2">
-              Certificate File
-            </label>
+                <span className="
+                  mt-0.5
+                  w-2
+                  h-2
+                  rounded-full
+                  bg-[#D4AF37]
+                  shrink-0
+                "></span>
 
-            <div className="border-2 border-dashed border-slate-300 rounded-xl p-8 text-center hover:border-blue-400 transition">
+                <span>
+                  {message}
+                </span>
 
-              <div className="text-4xl mb-3">
-                📄
               </div>
 
-              <p className="text-sm text-slate-600 mb-2">
-                Select your certificate file
-              </p>
+            </div>
+          )}
 
-              <p className="text-xs text-slate-400 mb-4">
-                PDF, JPG or PNG
-              </p>
+          {/* FORM */}
+          <form
+            onSubmit={handleSubmit}
+            className="space-y-6"
+          >
+
+            {/* CERTIFICATE NAME */}
+            <div>
+
+              <label className="
+                block
+                text-sm
+                font-semibold
+                text-white
+                mb-2
+              ">
+                Certificate Name
+              </label>
 
               <input
-                type="file"
-                accept=".pdf,.jpg,.jpeg,.png"
-                onChange={(e) => setFile(e.target.files[0])}
-                required
-                className="block w-full text-sm text-slate-600
-                           file:mr-4 file:py-2 file:px-4
-                           file:rounded-lg file:border-0
-                           file:bg-blue-50 file:text-blue-700
-                           file:font-semibold
-                           hover:file:bg-blue-100"
+                type="text"
+                value={certificateName}
+                onChange={(e) =>
+                  setCertificateName(e.target.value)
+                }
+                placeholder="Example: Java Certification"
+                className="
+                  w-full
+                  bg-[#080808]
+                  text-white
+                  placeholder:text-[#666666]
+                  border
+                  border-[#333333]
+                  rounded-lg
+                  px-4
+                  py-3
+                  outline-none
+                  focus:border-[#D4AF37]
+                  focus:ring-1
+                  focus:ring-[#D4AF37]
+                  transition
+                "
               />
 
             </div>
 
-            {file && (
-              <div className="mt-3 bg-slate-50 rounded-lg p-3">
+            {/* FILE */}
+            <div>
 
-                <p className="text-sm text-slate-700">
-                  Selected file:
-                </p>
+              <label className="
+                block
+                text-sm
+                font-semibold
+                text-white
+                mb-2
+              ">
+                Certificate File
+              </label>
 
-                <p className="text-sm font-semibold text-slate-800 mt-1">
-                  {file.name}
-                </p>
+              <div className="
+                bg-[#080808]
+                border
+                border-[#333333]
+                rounded-lg
+                p-1
+                focus-within:border-[#D4AF37]
+                transition
+              ">
+
+                <input
+                  id="certificateFile"
+                  type="file"
+                  accept=".pdf,.jpg,.jpeg,.png"
+                  onChange={(e) =>
+                    setCertificateFile(e.target.files[0])
+                  }
+                  className="
+                    w-full
+                    px-3
+                    py-2
+                    text-sm
+                    text-[#B8B8B8]
+                    file:mr-4
+                    file:py-2
+                    file:px-4
+                    file:rounded-md
+                    file:border-0
+                    file:bg-[#D4AF37]
+                    file:text-[#050505]
+                    file:font-semibold
+                    file:cursor-pointer
+                    hover:file:bg-[#F2D675]
+                    file:transition
+                  "
+                />
 
               </div>
-            )}
+
+              <p className="text-xs text-[#777777] mt-2">
+                Supported formats: PDF, JPG, JPEG, PNG
+              </p>
+
+            </div>
+
+            {/* SUBMIT */}
+            <button
+              type="submit"
+              className="
+                w-full
+                bg-[#D4AF37]
+                hover:bg-[#F2D675]
+                text-[#050505]
+                py-3
+                rounded-lg
+                font-semibold
+                transition
+                duration-200
+                shadow-lg
+                shadow-black/20
+              "
+            >
+              Upload Certificate
+            </button>
+
+          </form>
+
+        </div>
+
+        {/* INFO */}
+        <div className="
+          mt-5
+          bg-[#0D0D0D]
+          border
+          border-[#292929]
+          rounded-xl
+          p-4
+        ">
+
+          <div className="flex items-start gap-3">
+
+            <div className="
+              w-8
+              h-8
+              rounded-lg
+              bg-[#17130A]
+              border
+              border-[#3D3318]
+              flex
+              items-center
+              justify-center
+              text-[#D4AF37]
+              text-sm
+              shrink-0
+            ">
+              i
+            </div>
+
+            <div>
+
+              <p className="text-sm font-semibold text-white">
+                Verification Process
+              </p>
+
+              <p className="text-xs text-[#B8B8B8] mt-1 leading-relaxed">
+                Your uploaded certificate will remain pending until it is
+                reviewed and verified by the responsible faculty member.
+              </p>
+
+            </div>
 
           </div>
 
-          {/* Submit */}
-
-          <button
-            type="submit"
-            className="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-lg font-semibold transition"
-          >
-            Submit for Verification
-          </button>
-
-        </form>
+        </div>
 
       </main>
+
+      {/* ================= FOOTER ================= */}
+      <footer className="
+        mt-6
+        border-t
+        border-[#292929]
+        bg-[#080808]
+      ">
+
+        <div className="
+          max-w-6xl
+          mx-auto
+          px-6
+          sm:px-8
+          py-5
+          flex
+          flex-col
+          sm:flex-row
+          items-center
+          justify-between
+          gap-2
+        ">
+
+          <p className="text-sm text-[#B8B8B8]">
+            © 2026 College Management Portal
+          </p>
+
+          <div className="flex items-center gap-2">
+
+            <span className="
+              w-1.5
+              h-1.5
+              rounded-full
+              bg-[#D4AF37]
+            "></span>
+
+            <p className="text-sm text-[#B8B8B8]">
+              Student Portal
+            </p>
+
+          </div>
+
+        </div>
+
+      </footer>
 
     </div>
   );

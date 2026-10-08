@@ -50,50 +50,119 @@ function Events() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-100">
+    <div className="min-h-screen bg-[#050505] text-white">
 
-      {/* Navbar */}
+      {/* ================= NAVBAR ================= */}
+      <nav className="
+        bg-[#080808]
+        border-b
+        border-[#292929]
+        px-6
+        py-4
+      ">
 
-      <nav className="bg-white border-b border-slate-200 px-6 py-4">
-        <div className="max-w-7xl mx-auto flex items-center justify-between">
+        <div className="
+          max-w-7xl
+          mx-auto
+          flex
+          items-center
+          justify-between
+        ">
 
-          <div>
-            <h1 className="text-xl font-bold text-slate-800">
-              College Workflow
-            </h1>
+          {/* BRAND */}
+          <div className="flex items-center gap-3">
 
-            <p className="text-xs text-slate-500">
-              Student Portal
-            </p>
+            <div className="
+              w-10
+              h-10
+              rounded-lg
+              bg-[#D4AF37]
+              text-[#050505]
+              flex
+              items-center
+              justify-center
+              font-bold
+            ">
+              CW
+            </div>
+
+            <div>
+
+              <h1 className="text-xl font-bold text-white">
+                College Workflow
+              </h1>
+
+              <p className="text-xs text-[#B8B8B8]">
+                Student Portal
+              </p>
+
+            </div>
+
           </div>
 
+          {/* DASHBOARD */}
           <Link
             to="/student"
-            className="text-sm text-blue-600 font-medium hover:text-blue-700"
+            className="
+              text-sm
+              text-[#D4AF37]
+              font-medium
+              hover:text-[#F2D675]
+              transition
+            "
           >
             ← Dashboard
           </Link>
 
         </div>
+
       </nav>
 
-      {/* Main */}
-
+      {/* ================= MAIN ================= */}
       <main className="max-w-7xl mx-auto px-6 py-8">
 
+        {/* PAGE HEADER */}
         <div className="mb-8">
-          <h2 className="text-3xl font-bold text-slate-800">
+
+          <div className="flex items-center gap-2 mb-3">
+
+            <span className="
+              w-2
+              h-2
+              rounded-full
+              bg-[#D4AF37]
+            "></span>
+
+            <span className="
+              text-sm
+              font-medium
+              text-[#D4AF37]
+              uppercase
+              tracking-wide
+            ">
+              Student Activities
+            </span>
+
+          </div>
+
+          <h2 className="text-3xl font-bold text-white">
             College Events
           </h2>
 
-          <p className="text-slate-500 mt-2">
+          <p className="text-[#B8B8B8] mt-2">
             View upcoming college events and register for activities.
           </p>
+
         </div>
 
-        {/* Events */}
-
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {/* ================= EVENTS ================= */}
+        <div className="
+          grid
+          grid-cols-1
+          md:grid-cols-2
+          lg:grid-cols-3
+          gap-6
+        ">
 
           {events.map((event) => {
 
@@ -102,74 +171,195 @@ function Events() {
             return (
               <div
                 key={event.id}
-                className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden"
+                className="
+                  group
+                  bg-[#0D0D0D]
+                  rounded-2xl
+                  border
+                  border-[#292929]
+                  shadow-xl
+                  overflow-hidden
+                  hover:border-[#D4AF37]
+                  transition-all
+                  duration-200
+                "
               >
 
-                {/* Poster */}
-
-                <div className="h-52 bg-slate-200 overflow-hidden">
+                {/* POSTER */}
+                <div className="
+                  h-52
+                  bg-[#111111]
+                  overflow-hidden
+                  relative
+                ">
 
                   <img
                     src={event.poster}
                     alt={event.title}
-                    className="w-full h-full object-cover"
+                    className="
+                      w-full
+                      h-full
+                      object-cover
+                      opacity-85
+                      group-hover:opacity-100
+                      group-hover:scale-105
+                      transition-all
+                      duration-500
+                    "
                   />
 
-                </div>
+                  {/* IMAGE OVERLAY */}
+                  <div className="
+                    absolute
+                    inset-0
+                    bg-gradient-to-t
+                    from-[#050505]/70
+                    via-transparent
+                    to-transparent
+                    pointer-events-none
+                  "></div>
 
-                {/* Event Details */}
+                  {/* EVENT TYPE */}
+                  <div className="absolute top-4 left-4">
 
-                <div className="p-6">
-
-                  <div className="flex items-center justify-between">
-
-                    <span className="text-xs font-semibold bg-blue-100 text-blue-700 px-3 py-1 rounded-full">
+                    <span className="
+                      inline-flex
+                      items-center
+                      px-3
+                      py-1.5
+                      rounded-full
+                      bg-[#050505]/90
+                      border
+                      border-[#D4AF37]/40
+                      text-[#D4AF37]
+                      text-xs
+                      font-semibold
+                      backdrop-blur-sm
+                    ">
                       {event.type}
                     </span>
 
                   </div>
 
-                  <h3 className="text-xl font-bold text-slate-800 mt-4">
+                </div>
+
+                {/* EVENT DETAILS */}
+                <div className="p-6">
+
+                  <h3 className="
+                    text-xl
+                    font-bold
+                    text-white
+                    leading-tight
+                  ">
                     {event.title}
                   </h3>
 
-                  <div className="space-y-3 text-sm mt-4">
+                  {/* EVENT INFO */}
+                  <div className="space-y-3 text-sm mt-5">
 
-                    <div className="flex gap-3">
-                      <span>📅</span>
-                      <span className="text-slate-600">
+                    {/* DATE */}
+                    <div className="flex items-center gap-3">
+
+                      <div className="
+                        w-8
+                        h-8
+                        rounded-lg
+                        bg-[#17130A]
+                        border
+                        border-[#3D3318]
+                        flex
+                        items-center
+                        justify-center
+                        shrink-0
+                      ">
+                        📅
+                      </div>
+
+                      <span className="text-[#B8B8B8]">
                         {event.date}
                       </span>
+
                     </div>
 
-                    <div className="flex gap-3">
-                      <span>⏰</span>
-                      <span className="text-slate-600">
+                    {/* TIME */}
+                    <div className="flex items-center gap-3">
+
+                      <div className="
+                        w-8
+                        h-8
+                        rounded-lg
+                        bg-[#17130A]
+                        border
+                        border-[#3D3318]
+                        flex
+                        items-center
+                        justify-center
+                        shrink-0
+                      ">
+                        ⏰
+                      </div>
+
+                      <span className="text-[#B8B8B8]">
                         {event.time}
                       </span>
+
                     </div>
 
-                    <div className="flex gap-3">
-                      <span>📍</span>
-                      <span className="text-slate-600">
+                    {/* VENUE */}
+                    <div className="flex items-center gap-3">
+
+                      <div className="
+                        w-8
+                        h-8
+                        rounded-lg
+                        bg-[#17130A]
+                        border
+                        border-[#3D3318]
+                        flex
+                        items-center
+                        justify-center
+                        shrink-0
+                      ">
+                        📍
+                      </div>
+
+                      <span className="text-[#B8B8B8]">
                         {event.venue}
                       </span>
+
                     </div>
 
                   </div>
 
-                  <p className="text-sm text-slate-500 mt-5">
+                  {/* DESCRIPTION */}
+                  <p className="
+                    text-sm
+                    text-[#888888]
+                    mt-5
+                    leading-relaxed
+                  ">
                     {event.description}
                   </p>
 
+                  {/* REGISTER BUTTON */}
                   <button
                     onClick={() => handleRegister(event.id)}
                     disabled={isRegistered}
-                    className={`w-full mt-6 py-3 rounded-lg font-semibold transition ${
-                      isRegistered
-                        ? "bg-green-100 text-green-700 cursor-default"
-                        : "bg-blue-600 hover:bg-blue-700 text-white"
-                    }`}
+                    className={`
+                      w-full
+                      mt-6
+                      py-3
+                      rounded-lg
+                      font-semibold
+                      transition
+                      duration-200
+                      ${
+                        isRegistered
+                          ? "bg-[#17130A] text-[#D4AF37] border border-[#3D3318] cursor-default"
+                          : "bg-[#D4AF37] hover:bg-[#F2D675] text-[#050505]"
+                      }
+                    `}
                   >
                     {isRegistered
                       ? "✓ Registered"
@@ -185,6 +375,50 @@ function Events() {
         </div>
 
       </main>
+
+      {/* ================= FOOTER ================= */}
+      <footer className="
+        mt-10
+        border-t
+        border-[#292929]
+        bg-[#080808]
+      ">
+
+        <div className="
+          max-w-7xl
+          mx-auto
+          px-6
+          py-5
+          flex
+          flex-col
+          sm:flex-row
+          items-center
+          justify-between
+          gap-2
+        ">
+
+          <p className="text-sm text-[#B8B8B8]">
+            © 2026 College Management Portal
+          </p>
+
+          <div className="flex items-center gap-2">
+
+            <span className="
+              w-1.5
+              h-1.5
+              rounded-full
+              bg-[#D4AF37]
+            "></span>
+
+            <p className="text-sm text-[#B8B8B8]">
+              Student Portal
+            </p>
+
+          </div>
+
+        </div>
+
+      </footer>
 
     </div>
   );

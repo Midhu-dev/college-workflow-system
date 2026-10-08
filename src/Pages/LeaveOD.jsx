@@ -43,57 +43,231 @@ function LeaveOD() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-100">
-      {/* Header */}
-      <div className="bg-white border-b px-8 py-5 flex justify-between items-center">
-        <div>
-          <h1 className="text-2xl font-bold text-slate-800">
-            Leave / OD Application
-          </h1>
+    <div className="min-h-screen bg-[#050505] text-white">
 
-          <p className="text-slate-500">
-            Submit your leave or on-duty request
-          </p>
+      {/* ================= HEADER ================= */}
+      <header className="
+        bg-[#080808]
+        border-b
+        border-[#292929]
+        px-6
+        sm:px-8
+        py-5
+      ">
+
+        <div className="
+          max-w-6xl
+          mx-auto
+          flex
+          flex-col
+          sm:flex-row
+          sm:items-center
+          sm:justify-between
+          gap-4
+        ">
+
+          {/* TITLE */}
+          <div>
+
+            <div className="flex items-center gap-2 mb-2">
+
+              <span className="
+                w-2
+                h-2
+                rounded-full
+                bg-[#D4AF37]
+              "></span>
+
+              <span className="
+                text-xs
+                font-semibold
+                tracking-wider
+                text-[#D4AF37]
+                uppercase
+              ">
+                Student Services
+              </span>
+
+            </div>
+
+            <h1 className="text-2xl font-bold text-white">
+              Leave / OD Application
+            </h1>
+
+            <p className="text-sm text-[#B8B8B8] mt-1">
+              Submit your leave or on-duty request
+            </p>
+
+          </div>
+
+          {/* DASHBOARD */}
+          <Link
+            to="/student"
+            className="
+              inline-flex
+              items-center
+              justify-center
+              px-4
+              py-2
+              rounded-lg
+              bg-[#0D0D0D]
+              border
+              border-[#292929]
+              text-white
+              text-sm
+              font-medium
+              hover:border-[#D4AF37]
+              hover:text-[#D4AF37]
+              transition
+              duration-200
+            "
+          >
+            ← Back to Dashboard
+          </Link>
+
         </div>
 
-        <Link
-          to="/student"
-          className="px-4 py-2 rounded-lg bg-slate-800 text-white hover:bg-slate-700"
-        >
-          Back to Dashboard
-        </Link>
-      </div>
+      </header>
 
-      {/* Form */}
-      <div className="max-w-3xl mx-auto p-8">
-        <div className="bg-white rounded-2xl border shadow-sm p-8">
+      {/* ================= CONTENT ================= */}
+      <main className="max-w-3xl mx-auto px-6 py-10">
+
+        {/* FORM CARD */}
+        <div className="
+          bg-[#0D0D0D]
+          rounded-2xl
+          border
+          border-[#292929]
+          shadow-xl
+          p-6
+          sm:p-8
+        ">
+
+          {/* CARD HEADER */}
+          <div className="mb-7">
+
+            <div className="
+              w-11
+              h-11
+              rounded-lg
+              bg-[#17130A]
+              border
+              border-[#3D3318]
+              flex
+              items-center
+              justify-center
+              text-xl
+              mb-4
+            ">
+              📋
+            </div>
+
+            <h2 className="text-xl font-bold text-white">
+              Request Details
+            </h2>
+
+            <p className="text-sm text-[#B8B8B8] mt-1">
+              Fill in the details below to submit your request.
+            </p>
+
+          </div>
+
+          {/* MESSAGE */}
           {message && (
-            <div className="mb-6 bg-blue-50 text-blue-700 p-4 rounded-lg">
-              {message}
+            <div className="
+              mb-6
+              p-4
+              rounded-lg
+              bg-[#17130A]
+              border
+              border-[#3D3318]
+              text-[#D4AF37]
+              text-sm
+            ">
+
+              <div className="flex items-center gap-3">
+
+                <span className="
+                  w-2
+                  h-2
+                  rounded-full
+                  bg-[#D4AF37]
+                  shrink-0
+                "></span>
+
+                <span>
+                  {message}
+                </span>
+
+              </div>
+
             </div>
           )}
 
-          <form onSubmit={handleSubmit} className="space-y-6">
-            {/* Leave Type */}
+          {/* FORM */}
+          <form
+            onSubmit={handleSubmit}
+            className="space-y-6"
+          >
+
+            {/* REQUEST TYPE */}
             <div>
-              <label className="block text-sm font-semibold text-slate-700 mb-2">
+
+              <label className="
+                block
+                text-sm
+                font-semibold
+                text-white
+                mb-2
+              ">
                 Request Type
               </label>
 
               <select
                 value={type}
                 onChange={(e) => setType(e.target.value)}
-                className="w-full border rounded-lg px-4 py-3 bg-white focus:ring-2 focus:ring-blue-500 outline-none"
+                className="
+                  w-full
+                  border
+                  border-[#333333]
+                  rounded-lg
+                  px-4
+                  py-3
+                  bg-[#080808]
+                  text-white
+                  focus:border-[#D4AF37]
+                  focus:ring-1
+                  focus:ring-[#D4AF37]
+                  outline-none
+                  transition
+                "
               >
-                <option value="Leave">Leave</option>
-                <option value="OD">OD</option>
+
+                <option value="Leave" className="bg-[#080808]">
+                  Leave
+                </option>
+
+                <option value="OD" className="bg-[#080808]">
+                  OD
+                </option>
+
               </select>
+
             </div>
 
-            {/* Dates */}
-            <div className="grid md:grid-cols-2 gap-5">
+            {/* DATES */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+
+              {/* FROM DATE */}
               <div>
-                <label className="block text-sm font-semibold text-slate-700 mb-2">
+
+                <label className="
+                  block
+                  text-sm
+                  font-semibold
+                  text-white
+                  mb-2
+                ">
                   From Date
                 </label>
 
@@ -101,12 +275,35 @@ function LeaveOD() {
                   type="date"
                   value={fromDate}
                   onChange={(e) => setFromDate(e.target.value)}
-                  className="w-full border rounded-lg px-4 py-3 focus:ring-2 focus:ring-blue-500 outline-none"
+                  className="
+                    w-full
+                    border
+                    border-[#333333]
+                    rounded-lg
+                    px-4
+                    py-3
+                    bg-[#080808]
+                    text-white
+                    focus:border-[#D4AF37]
+                    focus:ring-1
+                    focus:ring-[#D4AF37]
+                    outline-none
+                    transition
+                  "
                 />
+
               </div>
 
+              {/* TO DATE */}
               <div>
-                <label className="block text-sm font-semibold text-slate-700 mb-2">
+
+                <label className="
+                  block
+                  text-sm
+                  font-semibold
+                  text-white
+                  mb-2
+                ">
                   To Date
                 </label>
 
@@ -114,14 +311,37 @@ function LeaveOD() {
                   type="date"
                   value={toDate}
                   onChange={(e) => setToDate(e.target.value)}
-                  className="w-full border rounded-lg px-4 py-3 focus:ring-2 focus:ring-blue-500 outline-none"
+                  className="
+                    w-full
+                    border
+                    border-[#333333]
+                    rounded-lg
+                    px-4
+                    py-3
+                    bg-[#080808]
+                    text-white
+                    focus:border-[#D4AF37]
+                    focus:ring-1
+                    focus:ring-[#D4AF37]
+                    outline-none
+                    transition
+                  "
                 />
+
               </div>
+
             </div>
 
-            {/* Reason */}
+            {/* REASON */}
             <div>
-              <label className="block text-sm font-semibold text-slate-700 mb-2">
+
+              <label className="
+                block
+                text-sm
+                font-semibold
+                text-white
+                mb-2
+              ">
                 Reason
               </label>
 
@@ -134,20 +354,150 @@ function LeaveOD() {
                     ? "Enter the reason for your leave..."
                     : "Enter the reason for your OD..."
                 }
-                className="w-full border rounded-lg px-4 py-3 focus:ring-2 focus:ring-blue-500 outline-none resize-none"
+                className="
+                  w-full
+                  border
+                  border-[#333333]
+                  rounded-lg
+                  px-4
+                  py-3
+                  bg-[#080808]
+                  text-white
+                  placeholder:text-[#666666]
+                  focus:border-[#D4AF37]
+                  focus:ring-1
+                  focus:ring-[#D4AF37]
+                  outline-none
+                  resize-none
+                  transition
+                "
               />
+
             </div>
 
-            {/* Submit */}
+            {/* SUBMIT */}
             <button
               type="submit"
-              className="w-full bg-blue-600 text-white py-3 rounded-lg font-semibold hover:bg-blue-700"
+              className="
+                w-full
+                bg-[#D4AF37]
+                hover:bg-[#F2D675]
+                text-[#050505]
+                py-3
+                rounded-lg
+                font-semibold
+                transition
+                duration-200
+                shadow-lg
+                shadow-black/20
+              "
             >
               Submit {type} Request
             </button>
+
           </form>
+
         </div>
-      </div>
+
+        {/* INFO CARD */}
+        <div className="
+          mt-5
+          bg-[#0D0D0D]
+          border
+          border-[#292929]
+          rounded-xl
+          p-4
+        ">
+
+          <div className="flex items-start gap-3">
+
+            <div className="
+              w-8
+              h-8
+              rounded-lg
+              bg-[#17130A]
+              border
+              border-[#3D3318]
+              flex
+              items-center
+              justify-center
+              text-[#D4AF37]
+              text-sm
+              font-bold
+              shrink-0
+            ">
+              i
+            </div>
+
+            <div>
+
+              <p className="text-sm font-semibold text-white">
+                Request Status
+              </p>
+
+              <p className="
+                text-xs
+                text-[#B8B8B8]
+                mt-1
+                leading-relaxed
+              ">
+                Your request will be marked as pending after submission and
+                can be reviewed by the responsible faculty member.
+              </p>
+
+            </div>
+
+          </div>
+
+        </div>
+
+      </main>
+
+      {/* ================= FOOTER ================= */}
+      <footer className="
+        mt-6
+        border-t
+        border-[#292929]
+        bg-[#080808]
+      ">
+
+        <div className="
+          max-w-6xl
+          mx-auto
+          px-6
+          sm:px-8
+          py-5
+          flex
+          flex-col
+          sm:flex-row
+          items-center
+          justify-between
+          gap-2
+        ">
+
+          <p className="text-sm text-[#B8B8B8]">
+            © 2026 College Management Portal
+          </p>
+
+          <div className="flex items-center gap-2">
+
+            <span className="
+              w-1.5
+              h-1.5
+              rounded-full
+              bg-[#D4AF37]
+            "></span>
+
+            <p className="text-sm text-[#B8B8B8]">
+              Student Portal
+            </p>
+
+          </div>
+
+        </div>
+
+      </footer>
+
     </div>
   );
 }
