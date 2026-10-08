@@ -4,6 +4,7 @@ import PageHeader from "../components/PageHeader";
 import StatusBadge from "../components/StatusBadge";
 import EmptyState from "../components/EmptyState";
 import LoadingState from "../components/LoadingState";
+import Footer from "../components/Footer";
 
 function TeacherLeaveOD() {
   const [requests, setRequests] = useState([]);
