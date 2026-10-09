@@ -9,42 +9,50 @@ export default function PageHeader({
   children,
 }) {
   return (
-    <div className="mb-8">
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div>
+    <header className="mb-7 sm:mb-8">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        {/* Page Information */}
+        <div className="min-w-0 flex-1">
           {badge && (
-            <div className="flex items-center gap-2 mb-2">
-              <span className="w-1.5 h-1.5 rounded-full bg-[#D4AF37]" />
-              <span className="text-[11px] font-semibold tracking-widest text-[#D4AF37] uppercase">
+            <div className="mb-2 flex items-center gap-2">
+              <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-[#C7A647]" />
+
+              <span className="text-[10px] font-semibold uppercase tracking-[0.16em] text-[#9A7926] sm:text-[11px]">
                 {badge}
               </span>
             </div>
           )}
 
-          <h1 className="text-2xl sm:text-3xl font-bold text-white tracking-tight">
+          <h1 className="break-words text-2xl font-bold tracking-tight text-gray-800 sm:text-3xl">
             {title}
           </h1>
 
           {description && (
-            <p className="text-sm text-[#888888] mt-1.5 max-w-2xl leading-relaxed">
+            <p className="mt-1.5 max-w-2xl text-xs leading-6 text-gray-500 sm:text-sm">
               {description}
             </p>
           )}
         </div>
 
-        <div className="flex items-center gap-3 shrink-0">
-          {children}
+        {/* Actions */}
+        {(children || backTo) && (
+          <div className="flex shrink-0 flex-wrap items-center gap-2.5 sm:justify-end">
+            {children}
 
-          {backTo && (
-            <Link
-              to={backTo}
-              className="inline-flex items-center justify-center px-3.5 py-2 rounded-lg bg-[#0D0D0D] border border-[#292929] text-xs font-semibold text-[#B8B8B8] hover:text-[#D4AF37] hover:border-[#D4AF37] transition-colors"
-            >
-              {backLabel}
-            </Link>
-          )}
-        </div>
+            {backTo && (
+              <Link
+                to={backTo}
+                className="inline-flex min-h-10 items-center justify-center gap-2 rounded-lg border border-gray-200 bg-white px-3.5 py-2 text-xs font-semibold text-gray-600 shadow-sm transition hover:border-[#E3CE8D] hover:bg-[#FBF7E9] hover:text-[#80651E] focus:outline-none focus:ring-2 focus:ring-[#D8B65C]/30"
+              >
+                {backLabel}
+              </Link>
+            )}
+          </div>
+        )}
       </div>
-    </div>
+
+      {/* Subtle divider */}
+      <div className="mt-5 border-b border-gray-100 sm:mt-6" />
+    </header>
   );
 }

@@ -100,7 +100,6 @@ function TeacherEvents() {
       return;
     }
 
-    // Validate that the selected file is an image.
     if (!file.type.startsWith("image/")) {
       setErrorMessage("Please select a valid image file.");
       e.target.value = "";
@@ -109,7 +108,6 @@ function TeacherEvents() {
       return;
     }
 
-    // Limit image size to 5 MB.
     if (file.size > 5 * 1024 * 1024) {
       setErrorMessage("The image must be smaller than 5 MB.");
       e.target.value = "";
@@ -144,7 +142,13 @@ function TeacherEvents() {
     setMessage("");
     setErrorMessage("");
 
-    if (!title.trim() || !date || !time || !venue.trim() || !description.trim()) {
+    if (
+      !title.trim() ||
+      !date ||
+      !time ||
+      !venue.trim() ||
+      !description.trim()
+    ) {
       setErrorMessage(
         "Please complete all required event information fields."
       );
@@ -161,7 +165,6 @@ function TeacherEvents() {
     try {
       setLoading(true);
 
-      // Send the image and event fields as multipart/form-data.
       const formData = new FormData();
 
       formData.append("title", title.trim());
@@ -190,7 +193,9 @@ function TeacherEvents() {
         );
       }
 
-      setMessage("Event successfully published to the student portal!");
+      setMessage(
+        "Event successfully published to the student portal!"
+      );
 
       setTitle("");
       setDate("");
@@ -218,308 +223,1089 @@ function TeacherEvents() {
     }
   };
 
+  const tones = [
+    "yellow",
+    "blue",
+    "green",
+    "peach",
+    "lavender",
+    "pink",
+  ];
+
+  const inputClass =
+    "te-input";
+
+  const labelClass =
+    "te-label";
+
   return (
     <Sidebar role="teacher">
-      <main className="max-w-5xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-8 sm:py-10 flex-1">
-        <PageHeader
-          badge="Faculty Portal"
-          title="Event Management"
-          description="Schedule, configure, and publish campus events, symposiums, guest lectures, and student competitions."
-          backTo="/teacher"
-        />
+      <style>{`
+        .teacher-events-page {
+          --te-text: #292a27;
+          --te-muted: #595b53;
+          --te-border: #e2e0d7;
 
-        {/* ALERTS */}
-        {message && (
-          <div className="mb-6 p-4 rounded-xl bg-[#17130A] border border-[#3D3318] text-[#D4AF37] text-xs flex items-start gap-2.5">
-            <span className="w-1.5 h-1.5 rounded-full bg-[#D4AF37] mt-1 shrink-0" />
-            <span className="leading-relaxed">{message}</span>
-          </div>
-        )}
+          width: 100%;
+          flex: 1;
+          background: #ffffff;
+          color: var(--te-text);
+          font-family: inherit;
+          font-size: 13px;
+        }
 
-        {errorMessage && (
-          <div className="mb-6 p-4 rounded-xl bg-[#1C0D0D] border border-[#3D1B1B] text-[#F87171] text-xs flex items-start gap-2.5">
-            <span className="w-1.5 h-1.5 rounded-full bg-[#F87171] mt-1 shrink-0" />
-            <span className="leading-relaxed">{errorMessage}</span>
-          </div>
-        )}
+        .teacher-events-page *,
+        .teacher-events-page *::before,
+        .teacher-events-page *::after {
+          box-sizing: border-box;
+        }
 
-        {/* CREATE EVENT FORM */}
-        <div className="bg-[#0D0D0D] border border-[#292929] rounded-2xl p-6 sm:p-8 shadow-xl mb-10">
-          <div className="flex items-center gap-4 mb-6 pb-6 border-b border-[#1F1F1F]">
-            <div className="w-12 h-12 rounded-xl bg-[#17130A] border border-[#3D3318] flex items-center justify-center text-2xl shrink-0">
-              📅
+        .te-container {
+          width: 100%;
+          max-width: 1152px;
+          margin: 0 auto;
+          padding: 34px 36px 42px;
+        }
+
+        /* Alerts */
+        .te-alert {
+          display: flex;
+          align-items: flex-start;
+          gap: 10px;
+          margin-bottom: 20px;
+          padding: 13px 15px;
+          border: 1px solid;
+          border-radius: 6px;
+          font-size: 12px;
+          line-height: 1.8;
+          overflow-wrap: anywhere;
+        }
+
+        .te-alert.success {
+          border-color: #b9d0ae;
+          background: #edf5e8;
+          color: #365d38;
+        }
+
+        .te-alert.error {
+          border-color: #e4bcb5;
+          background: #fff0ed;
+          color: #923e35;
+        }
+
+        .te-alert-icon {
+          display: grid;
+          width: 22px;
+          height: 22px;
+          flex-shrink: 0;
+          place-items: center;
+          border: 1px solid currentColor;
+          border-radius: 5px;
+          background: rgba(255, 255, 255, 0.5);
+          font-size: 12px;
+          font-weight: 800;
+        }
+
+        /* Common section card */
+        .te-panel {
+          margin-top: 25px;
+          overflow: hidden;
+          border: 1.5px solid #292a27;
+          border-radius: 6px;
+          background: #ffffff;
+          box-shadow: 3px 3px 0 #292a27;
+        }
+
+        /* Create form header: same pastel yellow as StudentDashboard */
+        .te-panel-header {
+          display: flex;
+          align-items: center;
+          gap: 14px;
+          padding: 20px 24px;
+          border-bottom: 1.5px solid #292a27;
+          background: #f5edc9;
+        }
+
+        .te-panel-icon {
+          display: grid;
+          width: 43px;
+          height: 43px;
+          flex-shrink: 0;
+          place-items: center;
+          border: 1px solid #292a27;
+          border-radius: 5px;
+          background: rgba(255, 255, 255, 0.4);
+          font-size: 20px;
+        }
+
+        .te-panel-title {
+          margin: 0;
+          color: #292a27;
+          font-size: 16px;
+          font-weight: 750;
+          line-height: 1.5;
+        }
+
+        .te-panel-subtitle {
+          margin: 4px 0 0;
+          color: #494a42;
+          font-size: 12px;
+          line-height: 1.8;
+        }
+
+        .te-panel-body {
+          padding: 24px;
+          background: #ffffff;
+        }
+
+        /* Form fields */
+        .te-form {
+          display: grid;
+          gap: 20px;
+        }
+
+        .te-field {
+          min-width: 0;
+        }
+
+        .te-label {
+          display: block;
+          margin-bottom: 8px;
+          color: #33342d;
+          font-size: 12px;
+          font-weight: 750;
+          line-height: 1.6;
+        }
+
+        .te-required {
+          margin-left: 3px;
+          color: #80651e;
+        }
+
+        .te-input {
+          display: block;
+          width: 100%;
+          min-width: 0;
+          min-height: 44px;
+          padding: 10px 12px;
+          border: 1px solid #bfc2b7;
+          border-radius: 5px;
+          background: #ffffff;
+          color: #292a27;
+          font-family: inherit;
+          font-size: 13px;
+          line-height: 1.7;
+          outline: none;
+          transition: border-color 150ms ease, box-shadow 150ms ease;
+        }
+
+        .te-input::placeholder {
+          color: #777970;
+          opacity: 1;
+        }
+
+        .te-input:focus {
+          border-color: #a88a34;
+          box-shadow: 0 0 0 3px rgba(168, 138, 52, 0.18);
+        }
+
+        .te-input:disabled {
+          background: #f3f3ef;
+          color: #777970;
+          cursor: not-allowed;
+        }
+
+        .te-textarea {
+          min-height: 120px;
+          resize: vertical;
+        }
+
+        .te-field-grid {
+          display: grid;
+          grid-template-columns: repeat(3, minmax(0, 1fr));
+          gap: 16px;
+        }
+
+        /* Poster upload */
+        .te-upload-box {
+          padding: 17px;
+          border: 1px dashed #aaa99e;
+          border-radius: 5px;
+          background: #fcfbf6;
+          transition: border-color 150ms ease;
+        }
+
+        .te-upload-box:hover {
+          border-color: #a88a34;
+        }
+
+        .te-file-input {
+          display: block;
+          width: 100%;
+          min-width: 0;
+          color: #494a42;
+          font-family: inherit;
+          font-size: 12px;
+        }
+
+        .te-file-input::file-selector-button {
+          margin-right: 12px;
+          padding: 9px 12px;
+          border: 1px solid #292a27;
+          border-radius: 4px;
+          background: #f5edc9;
+          color: #292a27;
+          font-family: inherit;
+          font-weight: 700;
+          cursor: pointer;
+        }
+
+        .te-upload-help {
+          margin: 9px 0 0;
+          color: #595b53;
+          font-size: 11px;
+          line-height: 1.7;
+        }
+
+        .te-selected-file {
+          margin-top: 12px;
+          padding: 10px 12px;
+          border: 1px solid #e2e0d7;
+          border-radius: 4px;
+          background: #ffffff;
+          color: #454640;
+          font-size: 12px;
+          overflow-wrap: anywhere;
+        }
+
+        .te-preview {
+          margin-top: 16px;
+          padding-top: 15px;
+          border-top: 1px solid #e2e0d7;
+        }
+
+        .te-preview-label {
+          margin: 0 0 9px;
+          color: #33342d;
+          font-size: 11px;
+          font-weight: 750;
+        }
+
+        .te-preview-image {
+          display: block;
+          width: 100%;
+          max-width: 400px;
+          max-height: 220px;
+          border: 1.5px solid #292a27;
+          border-radius: 5px;
+          background: #ffffff;
+          object-fit: contain;
+        }
+
+        .te-remove-poster {
+          margin-top: 11px;
+          padding: 5px 0;
+          border: none;
+          background: transparent;
+          color: #923e35;
+          font-family: inherit;
+          font-size: 12px;
+          font-weight: 700;
+          cursor: pointer;
+        }
+
+        .te-remove-poster:hover {
+          text-decoration: underline;
+          text-underline-offset: 3px;
+        }
+
+        /* Yellow submit button */
+        .te-publish-button {
+          display: inline-flex;
+          min-height: 43px;
+          align-items: center;
+          justify-content: center;
+          gap: 10px;
+          padding: 11px 17px;
+          border: 1.5px solid #292a27;
+          border-radius: 5px;
+          background: #f5edc9;
+          color: #292a27;
+          box-shadow: 2px 2px 0 #292a27;
+          font-family: inherit;
+          font-size: 12px;
+          font-weight: 750;
+          cursor: pointer;
+          transition: transform 150ms ease, box-shadow 150ms ease;
+        }
+
+        .te-publish-button:hover:not(:disabled) {
+          transform: translate(-1px, -1px);
+          box-shadow: 3px 3px 0 #292a27;
+          background: #eadb9e;
+        }
+
+        .te-publish-button:disabled {
+          opacity: 0.6;
+          cursor: not-allowed;
+        }
+
+        .te-spinner {
+          width: 15px;
+          height: 15px;
+          flex-shrink: 0;
+          border: 2px solid #66551e;
+          border-top-color: transparent;
+          border-radius: 50%;
+          animation: te-spin 700ms linear infinite;
+        }
+
+        @keyframes te-spin {
+          to {
+            transform: rotate(360deg);
+          }
+        }
+
+        /* Published events section heading */
+        .te-events-heading {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          flex-wrap: wrap;
+          gap: 12px;
+          padding: 20px 24px;
+          border-bottom: 1.5px solid #292a27;
+          background: #ffffff;
+        }
+
+        .te-published-count {
+          display: inline-flex;
+          align-items: center;
+          gap: 7px;
+          flex-shrink: 0;
+          padding: 6px 9px;
+          border: 1px solid #292a27;
+          border-radius: 4px;
+          background: #f5edc9;
+          color: #292a27;
+          font-size: 11px;
+          font-weight: 750;
+        }
+
+        .te-count-dot {
+          width: 7px;
+          height: 7px;
+          border-radius: 50%;
+          background: #8b752f;
+        }
+
+        .te-events-body {
+          padding: 22px 24px 25px;
+          background: #ffffff;
+        }
+
+        .te-event-list {
+          display: grid;
+          gap: 19px;
+        }
+
+        /* Event cards with visibly colored headers */
+        .te-event-card {
+          min-width: 0;
+          overflow: hidden;
+          border: 1.5px solid #292a27;
+          border-radius: 6px;
+          background: #ffffff;
+          box-shadow: 3px 3px 0 #292a27;
+          transition: transform 160ms ease, box-shadow 160ms ease;
+        }
+
+        .te-event-card:hover {
+          transform: translate(-1px, -2px);
+          box-shadow: 4px 5px 0 #292a27;
+        }
+
+        .te-tone-yellow {
+          background: #f5edc9;
+        }
+
+        .te-tone-blue {
+          background: #dcebf5;
+        }
+
+        .te-tone-green {
+          background: #dcefe5;
+        }
+
+        .te-tone-peach {
+          background: #f6e4d6;
+        }
+
+        .te-tone-lavender {
+          background: #e9e0f3;
+        }
+
+        .te-tone-pink {
+          background: #f5e0e7;
+        }
+
+        .te-event-header {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          flex-wrap: wrap;
+          gap: 12px;
+          min-height: 76px;
+          padding: 16px 18px;
+          border-bottom: 1.5px solid #292a27;
+        }
+
+        .te-event-header-main {
+          display: flex;
+          align-items: center;
+          min-width: 0;
+          gap: 12px;
+        }
+
+        .te-event-icon {
+          display: grid;
+          width: 38px;
+          height: 38px;
+          flex-shrink: 0;
+          place-items: center;
+          border: 1px solid #292a27;
+          border-radius: 5px;
+          background: rgba(255, 255, 255, 0.45);
+          font-size: 19px;
+        }
+
+        .te-event-title {
+          margin: 0;
+          color: #292a27;
+          font-size: 14px;
+          font-weight: 750;
+          line-height: 1.65;
+          overflow-wrap: anywhere;
+        }
+
+        .te-event-index {
+          margin-top: 3px;
+          color: #494a42;
+          font-family: monospace;
+          font-size: 10px;
+        }
+
+        .te-published-badge {
+          display: inline-flex;
+          align-items: center;
+          gap: 6px;
+          flex-shrink: 0;
+          padding: 5px 8px;
+          border: 1px solid #292a27;
+          border-radius: 4px;
+          background: rgba(255, 255, 255, 0.5);
+          color: #292a27;
+          font-size: 10px;
+          font-weight: 750;
+        }
+
+        .te-published-badge span {
+          width: 6px;
+          height: 6px;
+          border-radius: 50%;
+          background: #4c7546;
+        }
+
+        /* Event details remain white */
+        .te-event-body {
+          display: grid;
+          grid-template-columns: minmax(0, 1fr) minmax(0, 1.5fr);
+          gap: 20px;
+          padding: 18px;
+          background: #ffffff;
+        }
+
+        .te-event-poster-wrap {
+          min-width: 0;
+        }
+
+        .te-event-poster {
+          display: block;
+          width: 100%;
+          max-height: 250px;
+          border: 1px solid #e2e0d7;
+          border-radius: 5px;
+          background: #fcfbf6;
+          object-fit: contain;
+        }
+
+        .te-event-poster-placeholder {
+          display: grid;
+          min-height: 125px;
+          place-items: center;
+          border: 1px solid #e2e0d7;
+          border-radius: 5px;
+          background: #fcfbf6;
+          color: #595b53;
+          font-size: 12px;
+        }
+
+        .te-event-details {
+          display: grid;
+          align-content: start;
+          gap: 10px;
+          min-width: 0;
+        }
+
+        .te-event-detail {
+          display: flex;
+          align-items: flex-start;
+          gap: 9px;
+          min-width: 0;
+          padding: 10px 11px;
+          border: 1px solid #e2e0d7;
+          border-radius: 5px;
+          background: #fcfbf6;
+          color: #454640;
+          font-size: 12px;
+          line-height: 1.7;
+        }
+
+        .te-detail-icon {
+          display: grid;
+          width: 25px;
+          height: 25px;
+          flex-shrink: 0;
+          place-items: center;
+          border: 1px solid #292a27;
+          border-radius: 4px;
+          background: #f5edc9;
+          color: #292a27;
+        }
+
+        .te-detail-icon.blue {
+          background: #dcebf5;
+        }
+
+        .te-detail-icon.green {
+          background: #dcefe5;
+        }
+
+        .te-event-detail-text {
+          min-width: 0;
+          overflow-wrap: anywhere;
+        }
+
+        .te-event-description {
+          margin: 2px 0 0;
+          padding: 12px 13px;
+          border: 1px solid #e2e0d7;
+          border-radius: 5px;
+          background: #ffffff;
+          color: #454640;
+          font-size: 12px;
+          line-height: 1.85;
+          white-space: pre-line;
+          overflow-wrap: anywhere;
+        }
+
+        .teacher-events-page button:focus-visible,
+        .teacher-events-page input:focus-visible,
+        .teacher-events-page textarea:focus-visible,
+        .teacher-events-page a:focus-visible {
+          outline: 2px solid #292a27;
+          outline-offset: 3px;
+        }
+
+        /* Responsive layout */
+        @media (max-width: 900px) {
+          .te-container {
+            padding: 28px 24px 36px;
+          }
+
+          .te-event-body {
+            grid-template-columns: minmax(0, 1fr);
+          }
+
+          .te-event-poster {
+            max-width: 460px;
+            max-height: 260px;
+          }
+        }
+
+        @media (max-width: 640px) {
+          .te-container {
+            padding: 24px 16px 30px;
+          }
+
+          .te-panel {
+            margin-top: 21px;
+          }
+
+          .te-panel-header {
+            padding: 17px;
+          }
+
+          .te-panel-body,
+          .te-events-body {
+            padding: 18px;
+          }
+
+          .te-field-grid {
+            grid-template-columns: minmax(0, 1fr);
+          }
+
+          .te-events-heading {
+            align-items: flex-start;
+            flex-direction: column;
+            padding: 17px;
+          }
+
+          .te-event-header {
+            align-items: flex-start;
+            padding: 14px;
+          }
+
+          .te-event-body {
+            padding: 13px;
+            gap: 14px;
+          }
+
+          .te-event-title {
+            font-size: 13px;
+          }
+
+          .te-publish-button {
+            width: 100%;
+          }
+        }
+
+        @media (max-width: 380px) {
+          .te-container {
+            padding-right: 12px;
+            padding-left: 12px;
+          }
+
+          .te-panel-body,
+          .te-events-body {
+            padding: 12px;
+          }
+
+          .te-event-header-main {
+            align-items: flex-start;
+          }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+          .teacher-events-page *,
+          .teacher-events-page *::before,
+          .teacher-events-page *::after {
+            transition-duration: 0.01ms !important;
+          }
+        }
+      `}</style>
+
+      <main className="teacher-events-page">
+        <div className="te-container">
+          <PageHeader
+            badge="Faculty Portal"
+            title="Event Management"
+            description="Schedule and publish campus events, symposiums, guest lectures, and student competitions."
+            backTo="/teacher"
+          />
+
+          {/* Alerts */}
+          {message && (
+            <div className="te-alert success" role="status">
+              <span className="te-alert-icon" aria-hidden="true">
+                ✓
+              </span>
+              <p>{message}</p>
             </div>
+          )}
 
-            <div>
-              <h2 className="text-lg font-bold text-white tracking-tight">
-                Create & Publish Event
-              </h2>
-
-              <p className="text-xs text-[#888888] mt-0.5">
-                Published events will instantly display across all student dashboards.
-              </p>
+          {errorMessage && (
+            <div className="te-alert error" role="alert">
+              <span className="te-alert-icon" aria-hidden="true">
+                !
+              </span>
+              <p>{errorMessage}</p>
             </div>
-          </div>
+          )}
 
-          <form onSubmit={handlePublish} className="space-y-6">
-            {/* EVENT TITLE */}
-            <div>
-              <label className="block text-xs font-semibold text-[#CCCCCC] uppercase tracking-wider mb-2">
-                Event Title <span className="text-[#D4AF37]">*</span>
-              </label>
-
-              <input
-                type="text"
-                value={title}
-                onChange={(e) => setTitle(e.target.value)}
-                placeholder="e.g. National Level Technical Symposium 2026"
-                disabled={loading}
-                className="w-full px-4 py-3 bg-[#080808] text-white placeholder:text-[#555555] border border-[#292929] rounded-xl text-sm outline-none focus:border-[#D4AF37] focus:ring-1 focus:ring-[#D4AF37] transition"
-                required
-              />
-            </div>
-
-            {/* DATE, TIME AND VENUE */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div>
-                <label className="block text-xs font-semibold text-[#CCCCCC] uppercase tracking-wider mb-2">
-                  Event Date <span className="text-[#D4AF37]">*</span>
-                </label>
-
-                <input
-                  type="date"
-                  value={date}
-                  onChange={(e) => setDate(e.target.value)}
-                  onClick={openDatePicker}
-                  onFocus={openDatePicker}
-                  disabled={loading}
-                  className="w-full px-3.5 py-2.5 bg-[#080808] text-white border border-[#292929] rounded-xl text-sm outline-none focus:border-[#D4AF37] focus:ring-1 focus:ring-[#D4AF37] transition cursor-pointer"
-                  required
-                />
+          {/* Create Event Form */}
+          <section className="te-panel">
+            <div className="te-panel-header">
+              <div className="te-panel-icon" aria-hidden="true">
+                📅
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-[#CCCCCC] uppercase tracking-wider mb-2">
-                  Event Time <span className="text-[#D4AF37]">*</span>
-                </label>
+                <h2 className="te-panel-title">
+                  Create & Publish Event
+                </h2>
 
-                <input
-                  type="time"
-                  value={time}
-                  onChange={(e) => setTime(e.target.value)}
-                  onClick={openTimePicker}
-                  onFocus={openTimePicker}
-                  disabled={loading}
-                  className="w-full px-3.5 py-2.5 bg-[#080808] text-white border border-[#292929] rounded-xl text-sm outline-none focus:border-[#D4AF37] focus:ring-1 focus:ring-[#D4AF37] transition cursor-pointer"
-                  required
-                />
-              </div>
-
-              <div>
-                <label className="block text-xs font-semibold text-[#CCCCCC] uppercase tracking-wider mb-2">
-                  Venue / Location <span className="text-[#D4AF37]">*</span>
-                </label>
-
-                <input
-                  type="text"
-                  value={venue}
-                  onChange={(e) => setVenue(e.target.value)}
-                  placeholder="e.g. Auditorium / Main Seminar Hall"
-                  disabled={loading}
-                  className="w-full px-3.5 py-2.5 bg-[#080808] text-white placeholder:text-[#555555] border border-[#292929] rounded-xl text-sm outline-none focus:border-[#D4AF37] focus:ring-1 focus:ring-[#D4AF37] transition"
-                  required
-                />
-              </div>
-            </div>
-
-            {/* DESCRIPTION */}
-            <div>
-              <label className="block text-xs font-semibold text-[#CCCCCC] uppercase tracking-wider mb-2">
-                Event Description & Registration Guidelines{" "}
-                <span className="text-[#D4AF37]">*</span>
-              </label>
-
-              <textarea
-                value={description}
-                onChange={(e) => setDescription(e.target.value)}
-                rows={4}
-                placeholder="Include agenda, target audience departments, team sizes, and registration deadlines..."
-                disabled={loading}
-                className="w-full px-4 py-3 bg-[#080808] text-white placeholder:text-[#555555] border border-[#292929] rounded-xl text-sm outline-none focus:border-[#D4AF37] focus:ring-1 focus:ring-[#D4AF37] transition resize-none leading-relaxed"
-                required
-              />
-            </div>
-
-            {/* POSTER UPLOAD */}
-            <div>
-              <label
-                htmlFor="poster"
-                className="block text-xs font-semibold text-[#CCCCCC] uppercase tracking-wider mb-2"
-              >
-                Event Poster / Banner Image (Optional)
-              </label>
-
-              <div className="bg-[#080808] border border-[#292929] hover:border-[#383838] rounded-xl p-4 transition">
-                <input
-                  id="poster"
-                  name="poster"
-                  type="file"
-                  accept="image/png,image/jpeg,image/webp,image/gif"
-                  disabled={loading}
-                  onChange={handlePosterChange}
-                  className="w-full text-xs text-[#888888] file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:bg-[#1A160A] file:text-[#D4AF37] file:font-bold file:cursor-pointer hover:file:bg-[#241F0E] cursor-pointer"
-                />
-
-                <p className="text-[11px] text-[#777777] mt-2">
-                  Supported: PNG, JPG, WEBP or GIF. Maximum size: 5 MB.
+                <p className="te-panel-subtitle">
+                  Share upcoming campus activities with students.
                 </p>
-
-                {poster && (
-                  <p className="text-[11px] text-[#CCCCCC] mt-2 truncate">
-                    Selected file:{" "}
-                    <strong className="text-white">{poster.name}</strong>
-                  </p>
-                )}
-
-                {preview && (
-                  <div className="mt-4 pt-3 border-t border-[#1C1C1C]">
-                    <p className="text-[11px] font-semibold text-[#888888] uppercase tracking-wider mb-2">
-                      Poster Preview
-                    </p>
-
-                    <img
-                      src={preview}
-                      alt="Selected event poster preview"
-                      className="w-full max-w-sm h-48 object-cover rounded-xl border border-[#292929]"
-                    />
-
-                    <button
-                      type="button"
-                      disabled={loading}
-                      onClick={() => {
-                        setPoster(null);
-                        setPreview("");
-
-                        const posterInput =
-                          document.getElementById("poster");
-
-                        if (posterInput) {
-                          posterInput.value = "";
-                        }
-                      }}
-                      className="mt-3 text-xs text-[#F87171] hover:text-red-300 transition"
-                    >
-                      Remove poster
-                    </button>
-                  </div>
-                )}
               </div>
             </div>
 
-            {/* SUBMIT */}
-            <button
-              type="submit"
-              disabled={loading}
-              className="w-full bg-[#D4AF37] hover:bg-[#E5C158] disabled:opacity-50 disabled:cursor-not-allowed text-[#050505] py-3 rounded-xl text-sm font-bold transition shadow-md flex items-center justify-center gap-2"
-            >
-              {loading ? (
-                <>
-                  <span className="w-4 h-4 rounded-full border-2 border-[#050505] border-t-transparent animate-spin" />
-                  <span>Publishing Event...</span>
-                </>
-              ) : (
-                "Publish Event to Campus"
-              )}
-            </button>
-          </form>
-        </div>
+            <div className="te-panel-body">
+              <form onSubmit={handlePublish} className="te-form">
+                {/* Event Title */}
+                <div className="te-field">
+                  <label htmlFor="eventTitle" className={labelClass}>
+                    Event Title <span className="te-required">*</span>
+                  </label>
 
-        {/* PUBLISHED EVENTS */}
-        <div className="bg-[#0D0D0D] border border-[#292929] rounded-2xl p-6 sm:p-8 shadow-xl">
-          <div className="flex items-center justify-between mb-6 pb-4 border-b border-[#1F1F1F]">
-            <div>
-              <h2 className="text-lg font-bold text-white tracking-tight">
-                Published Campus Events
-              </h2>
+                  <input
+                    id="eventTitle"
+                    type="text"
+                    value={title}
+                    onChange={(e) => setTitle(e.target.value)}
+                    placeholder="e.g. National Level Technical Symposium 2026"
+                    disabled={loading}
+                    className={inputClass}
+                    required
+                  />
+                </div>
 
-              <p className="text-xs text-[#888888] mt-0.5">
-                Active activities currently visible to students
-              </p>
-            </div>
+                {/* Date, Time and Venue */}
+                <div className="te-field-grid">
+                  <div className="te-field">
+                    <label htmlFor="eventDate" className={labelClass}>
+                      Event Date <span className="te-required">*</span>
+                    </label>
 
-            <span className="text-xs font-semibold text-[#D4AF37] bg-[#17130A] border border-[#3D3318] px-3 py-1 rounded-full">
-              {events.length} Published
-            </span>
-          </div>
+                    <input
+                      id="eventDate"
+                      type="date"
+                      value={date}
+                      onChange={(e) => setDate(e.target.value)}
+                      onClick={openDatePicker}
+                      onFocus={openDatePicker}
+                      disabled={loading}
+                      className={`${inputClass} cursor-pointer`}
+                      required
+                    />
+                  </div>
 
-          {loadingEvents && (
-            <LoadingState message="Loading campus events..." />
-          )}
+                  <div className="te-field">
+                    <label htmlFor="eventTime" className={labelClass}>
+                      Event Time <span className="te-required">*</span>
+                    </label>
 
-          {!loadingEvents && events.length === 0 && (
-            <EmptyState
-              icon="🎉"
-              title="No Events Published"
-              message="No events have been published yet. Use the form above to announce a new campus activity."
-            />
-          )}
+                    <input
+                      id="eventTime"
+                      type="time"
+                      value={time}
+                      onChange={(e) => setTime(e.target.value)}
+                      onClick={openTimePicker}
+                      onFocus={openTimePicker}
+                      disabled={loading}
+                      className={`${inputClass} cursor-pointer`}
+                      required
+                    />
+                  </div>
 
-          {!loadingEvents && events.length > 0 && (
-            <div className="space-y-4">
-              {events.map((event) => (
-                <div
-                  key={event.id}
-                  className="bg-[#080808] border border-[#222222] hover:border-[#383838] transition rounded-xl p-5"
-                >
-                  <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
-                    <div className="flex-1">
-                      <h3 className="text-base font-bold text-white tracking-tight">
-                        {event.title}
-                      </h3>
+                  <div className="te-field">
+                    <label htmlFor="eventVenue" className={labelClass}>
+                      Venue / Location{" "}
+                      <span className="te-required">*</span>
+                    </label>
 
-                      <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5 mt-2.5 text-xs text-[#888888]">
-                        <span>
-                          📅{" "}
-                          {event.event_date
-                            ? new Date(
-                                event.event_date
-                              ).toLocaleDateString()
-                            : "TBA"}
-                        </span>
-
-                        <span>
-                          🕐{" "}
-                          {event.event_time
-                            ? String(event.event_time).slice(0, 5)
-                            : "TBA"}
-                        </span>
-
-                        <span>📍 {event.location || "Main Campus"}</span>
-                      </div>
-
-                      {event.poster_url && (
-                        <img
-                          src={
-                            event.poster_url.startsWith("http")
-                              ? event.poster_url
-                              : `http://localhost:5000${event.poster_url}`
-                          }
-                          alt={`${event.title} poster`}
-                          className="mt-4 w-full max-w-xs h-40 object-cover rounded-lg border border-[#292929]"
-                        />
-                      )}
-
-                      {event.description && (
-                        <p className="text-xs text-[#CCCCCC] mt-3 leading-relaxed bg-[#0D0D0D] p-3 rounded-lg border border-[#1A1A1A]">
-                          {event.description}
-                        </p>
-                      )}
-                    </div>
+                    <input
+                      id="eventVenue"
+                      type="text"
+                      value={venue}
+                      onChange={(e) => setVenue(e.target.value)}
+                      placeholder="e.g. Main Seminar Hall"
+                      disabled={loading}
+                      className={inputClass}
+                      required
+                    />
                   </div>
                 </div>
-              ))}
+
+                {/* Description */}
+                <div className="te-field">
+                  <label
+                    htmlFor="eventDescription"
+                    className={labelClass}
+                  >
+                    Event Description & Registration Guidelines{" "}
+                    <span className="te-required">*</span>
+                  </label>
+
+                  <textarea
+                    id="eventDescription"
+                    value={description}
+                    onChange={(e) => setDescription(e.target.value)}
+                    rows={4}
+                    placeholder="Include the agenda, target departments, team sizes, and registration deadlines..."
+                    disabled={loading}
+                    className={`${inputClass} te-textarea`}
+                    required
+                  />
+                </div>
+
+                {/* Poster Upload */}
+                <div className="te-field">
+                  <label htmlFor="poster" className={labelClass}>
+                    Event Poster / Banner{" "}
+                    <span style={{ fontWeight: 400, color: "#696b62" }}>
+                      (Optional)
+                    </span>
+                  </label>
+
+                  <div className="te-upload-box">
+                    <input
+                      id="poster"
+                      name="poster"
+                      type="file"
+                      accept="image/png,image/jpeg,image/webp,image/gif"
+                      disabled={loading}
+                      onChange={handlePosterChange}
+                      className="te-file-input"
+                    />
+
+                    <p className="te-upload-help">
+                      PNG, JPG, WEBP or GIF. Maximum file size: 5 MB.
+                    </p>
+
+                    {poster && (
+                      <div className="te-selected-file">
+                        Selected file:{" "}
+                        <strong>{poster.name}</strong>
+                      </div>
+                    )}
+
+                    {preview && (
+                      <div className="te-preview">
+                        <p className="te-preview-label">
+                          Poster Preview
+                        </p>
+
+                        <img
+                          src={preview}
+                          alt="Selected event poster preview"
+                          className="te-preview-image"
+                        />
+
+                        <button
+                          type="button"
+                          disabled={loading}
+                          onClick={() => {
+                            setPoster(null);
+                            setPreview("");
+
+                            const posterInput =
+                              document.getElementById("poster");
+
+                            if (posterInput) {
+                              posterInput.value = "";
+                            }
+                          }}
+                          className="te-remove-poster"
+                        >
+                          Remove poster
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* Publish Button */}
+                <div
+                  style={{
+                    paddingTop: "18px",
+                    borderTop: "1px solid #e2e0d7",
+                  }}
+                >
+                  <button
+                    type="submit"
+                    disabled={loading}
+                    className="te-publish-button"
+                  >
+                    {loading ? (
+                      <>
+                        <span
+                          className="te-spinner"
+                          aria-hidden="true"
+                        />
+                        Publishing Event...
+                      </>
+                    ) : (
+                      <>
+                        <span aria-hidden="true">↗</span>
+                        Publish Event to Campus
+                      </>
+                    )}
+                  </button>
+                </div>
+              </form>
             </div>
-          )}
+          </section>
+
+          {/* Published Events */}
+          <section className="te-panel">
+            <div className="te-events-heading">
+              <div>
+                <h2 className="te-panel-title">
+                  Published Campus Events
+                </h2>
+
+                <p className="te-panel-subtitle">
+                  Events currently available on student dashboards.
+                </p>
+              </div>
+
+              <span className="te-published-count">
+                <span className="te-count-dot" aria-hidden="true" />
+                {events.length} Published
+              </span>
+            </div>
+
+            <div className="te-events-body">
+              {loadingEvents && (
+                <LoadingState message="Loading campus events..." />
+              )}
+
+              {!loadingEvents && events.length === 0 && (
+                <EmptyState
+                  icon="🎉"
+                  title="No Events Published"
+                  message="No events have been published yet. Use the form above to announce a new campus activity."
+                />
+              )}
+
+              {!loadingEvents && events.length > 0 && (
+                <div className="te-event-list">
+                  {events.map((event, index) => {
+                    const tone = tones[index % tones.length];
+
+                    const posterUrl = event.poster_url
+                      ? event.poster_url.startsWith("http")
+                        ? event.poster_url
+                        : `http://localhost:5000${event.poster_url}`
+                      : "";
+
+                    return (
+                      <article
+                        key={event.id}
+                        className="te-event-card"
+                      >
+                        {/* Clearly visible pastel-colored card header */}
+                        <div className={`te-event-header te-tone-${tone}`}>
+                          <div className="te-event-header-main">
+                            <span
+                              className="te-event-icon"
+                              aria-hidden="true"
+                            >
+                              🎉
+                            </span>
+
+                            <div style={{ minWidth: 0 }}>
+                              <h3 className="te-event-title">
+                                {event.title}
+                              </h3>
+
+                              <p className="te-event-index">
+                                CAMPUS EVENT {String(index + 1).padStart(2, "0")}
+                              </p>
+                            </div>
+                          </div>
+
+                          <span className="te-published-badge">
+                            <span aria-hidden="true" />
+                            Published
+                          </span>
+                        </div>
+
+                        {/* Event details */}
+                        <div className="te-event-body">
+                          <div className="te-event-poster-wrap">
+                            {posterUrl ? (
+                              <img
+                                src={posterUrl}
+                                alt={`${event.title} poster`}
+                                loading="lazy"
+                                className="te-event-poster"
+                                onError={(e) => {
+                                  e.currentTarget.style.display = "none";
+                                }}
+                              />
+                            ) : (
+                              <div className="te-event-poster-placeholder">
+                                No poster uploaded
+                              </div>
+                            )}
+                          </div>
+
+                          <div className="te-event-details">
+                            <div className="te-event-detail">
+                              <span
+                                className="te-detail-icon"
+                                aria-hidden="true"
+                              >
+                                📅
+                              </span>
+
+                              <span className="te-event-detail-text">
+                                <strong>Event date:</strong>{" "}
+                                {event.event_date
+                                  ? new Date(
+                                      event.event_date
+                                    ).toLocaleDateString("en-IN")
+                                  : "TBA"}
+                              </span>
+                            </div>
+
+                            <div className="te-event-detail">
+                              <span
+                                className="te-detail-icon blue"
+                                aria-hidden="true"
+                              >
+                                🕐
+                              </span>
+
+                              <span className="te-event-detail-text">
+                                <strong>Event time:</strong>{" "}
+                                {event.event_time
+                                  ? String(event.event_time).slice(0, 5)
+                                  : "TBA"}
+                              </span>
+                            </div>
+
+                            <div className="te-event-detail">
+                              <span
+                                className="te-detail-icon green"
+                                aria-hidden="true"
+                              >
+                                📍
+                              </span>
+
+                              <span className="te-event-detail-text">
+                                <strong>Venue:</strong>{" "}
+                                {event.location || "Main Campus"}
+                              </span>
+                            </div>
+
+                            {event.description && (
+                              <p className="te-event-description">
+                                {event.description}
+                              </p>
+                            )}
+                          </div>
+                        </div>
+                      </article>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          </section>
         </div>
       </main>
 

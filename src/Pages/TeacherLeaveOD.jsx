@@ -6,6 +6,8 @@ import EmptyState from "../components/EmptyState";
 import LoadingState from "../components/LoadingState";
 import Footer from "../components/Footer";
 
+const tones = ["yellow", "blue", "green", "peach", "lavender", "pink"];
+
 function TeacherLeaveOD() {
   const [requests, setRequests] = useState([]);
   const [message, setMessage] = useState("");
@@ -79,9 +81,7 @@ function TeacherLeaveOD() {
             "Content-Type": "application/json",
             Authorization: `Bearer ${token}`,
           },
-          body: JSON.stringify({
-            status,
-          }),
+          body: JSON.stringify({ status }),
         }
       );
 
@@ -110,260 +110,678 @@ function TeacherLeaveOD() {
   const approved = requests.filter((r) => r.status === "APPROVED");
   const rejected = requests.filter((r) => r.status === "REJECTED");
 
+  const metrics = [
+    {
+      label: "Pending Approval",
+      count: pending.length,
+      icon: "◷",
+      tone: "yellow",
+    },
+    {
+      label: "Approved",
+      count: approved.length,
+      icon: "✓",
+      tone: "green",
+    },
+    {
+      label: "Rejected",
+      count: rejected.length,
+      icon: "✕",
+      tone: "pink",
+    },
+  ];
+
+  const formatDate = (value) => {
+    if (!value) return "N/A";
+
+    const date = new Date(value);
+
+    if (Number.isNaN(date.getTime())) {
+      return value;
+    }
+
+    return date.toLocaleDateString("en-IN", {
+      day: "2-digit",
+      month: "short",
+      year: "numeric",
+    });
+  };
+
+  const formatTime = (value) => {
+    if (!value) return "";
+    return String(value).slice(0, 5);
+  };
+
+  const formatSubmittedDate = (value) => {
+    if (!value) return "N/A";
+
+    const date = new Date(value);
+
+    if (Number.isNaN(date.getTime())) {
+      return "N/A";
+    }
+
+    return date.toLocaleDateString("en-IN", {
+      day: "2-digit",
+      month: "short",
+      year: "numeric",
+    });
+  };
+
+  const formatSubmittedTime = (value) => {
+    if (!value) return "";
+
+    const date = new Date(value);
+
+    if (Number.isNaN(date.getTime())) {
+      return "";
+    }
+
+    return date.toLocaleTimeString("en-IN", {
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+  };
+
+  const isSuccess = message.toLowerCase().includes("successfully");
+
   return (
     <Sidebar role="teacher">
-      <main className="max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-8 sm:py-10 flex-1">
-        
+      <style>{`
+        .teacher-leave-page {
+          --tl-ink: #292a27;
+          --tl-text: #454640;
+          --tl-muted: #595b53;
+          --tl-border: #292a27;
+          --tl-yellow: oklch(0.94 0.11 100);
+          --tl-blue: oklch(0.91 0.054 235);
+          --tl-green: oklch(0.91 0.075 160);
+          --tl-peach: oklch(0.92 0.066 55);
+          --tl-lavender: oklch(0.91 0.048 300);
+          --tl-pink: oklch(0.92 0.053 355);
+          color: var(--tl-ink);
+        }
+
+        .teacher-leave-page .tl-card {
+          border: 1.5px solid var(--tl-border);
+          border-radius: 7px;
+          background: #ffffff;
+          box-shadow: 3px 3px 0 var(--tl-border);
+          transition:
+            transform 160ms ease,
+            box-shadow 160ms ease;
+        }
+
+        .teacher-leave-page .tl-card:hover {
+          transform: translate(-1px, -1px);
+          box-shadow: 4px 5px 0 var(--tl-border);
+        }
+
+        .teacher-leave-page .tl-tone-yellow {
+          background: var(--tl-yellow);
+        }
+
+        .teacher-leave-page .tl-tone-blue {
+          background: var(--tl-blue);
+        }
+
+        .teacher-leave-page .tl-tone-green {
+          background: var(--tl-green);
+        }
+
+        .teacher-leave-page .tl-tone-peach {
+          background: var(--tl-peach);
+        }
+
+        .teacher-leave-page .tl-tone-lavender {
+          background: var(--tl-lavender);
+        }
+
+        .teacher-leave-page .tl-tone-pink {
+          background: var(--tl-pink);
+        }
+
+        .teacher-leave-page .tl-metric-header {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          gap: 12px;
+          border-bottom: 1.5px solid var(--tl-border);
+          padding: 14px 16px;
+          border-radius: 5px 5px 0 0;
+        }
+
+        .teacher-leave-page .tl-metric-label {
+          color: var(--tl-ink);
+          font-size: 12px;
+          font-weight: 700;
+          letter-spacing: 0.025em;
+        }
+
+        .teacher-leave-page .tl-metric-icon {
+          display: flex;
+          width: 34px;
+          height: 34px;
+          flex-shrink: 0;
+          align-items: center;
+          justify-content: center;
+          border: 1.5px solid var(--tl-border);
+          border-radius: 5px;
+          background: rgba(255, 255, 255, 0.55);
+          color: var(--tl-ink);
+          font-size: 18px;
+          font-weight: 700;
+        }
+
+        .teacher-leave-page .tl-metric-body {
+          padding: 13px 16px 16px;
+        }
+
+        .teacher-leave-page .tl-metric-count {
+          color: var(--tl-ink);
+          font-size: 32px;
+          font-weight: 800;
+          line-height: 1.2;
+        }
+
+        .teacher-leave-page .tl-section-header {
+          border-bottom: 1.5px solid var(--tl-border);
+          border-radius: 5px 5px 0 0;
+          padding: 18px 20px;
+        }
+
+        .teacher-leave-page .tl-request-card {
+          overflow: hidden;
+          border: 1.5px solid var(--tl-border);
+          border-radius: 7px;
+          background: #ffffff;
+          box-shadow: 3px 3px 0 var(--tl-border);
+          transition:
+            transform 160ms ease,
+            box-shadow 160ms ease;
+        }
+
+        .teacher-leave-page .tl-request-card:hover {
+          transform: translate(-1px, -1px);
+          box-shadow: 4px 5px 0 var(--tl-border);
+        }
+
+        .teacher-leave-page .tl-request-header {
+          display: flex;
+          flex-direction: column;
+          gap: 12px;
+          border-bottom: 1.5px solid var(--tl-border);
+          padding: 17px 18px;
+        }
+
+        .teacher-leave-page .tl-detail-box {
+          min-width: 0;
+          border: 1px solid #d6d7cf;
+          border-radius: 5px;
+          background: #fffefb;
+          padding: 12px;
+        }
+
+        .teacher-leave-page .tl-detail-label {
+          color: #595b53;
+          font-size: 10px;
+          font-weight: 800;
+          letter-spacing: 0.08em;
+          text-transform: uppercase;
+        }
+
+        .teacher-leave-page .tl-detail-value {
+          overflow-wrap: anywhere;
+          color: #292a27;
+          font-size: 13px;
+          font-weight: 650;
+        }
+
+        .teacher-leave-page .tl-reason-box {
+          border: 1.5px solid #d6d7cf;
+          border-radius: 6px;
+          background: #ffffff;
+          padding: 15px;
+        }
+
+        .teacher-leave-page .tl-reason-title {
+          margin-bottom: 8px;
+          color: #595b53;
+          font-size: 10px;
+          font-weight: 800;
+          letter-spacing: 0.08em;
+          text-transform: uppercase;
+        }
+
+        .teacher-leave-page .tl-action-btn {
+          display: inline-flex;
+          min-height: 42px;
+          align-items: center;
+          justify-content: center;
+          gap: 8px;
+          border: 1.5px solid var(--tl-border);
+          border-radius: 5px;
+          padding: 10px 20px;
+          color: var(--tl-ink);
+          font-size: 12px;
+          font-weight: 750;
+          box-shadow: 2px 2px 0 var(--tl-border);
+          transition:
+            transform 150ms ease,
+            box-shadow 150ms ease,
+            opacity 150ms ease;
+        }
+
+        .teacher-leave-page .tl-action-btn:hover:not(:disabled) {
+          transform: translate(-1px, -1px);
+          box-shadow: 3px 3px 0 var(--tl-border);
+        }
+
+        .teacher-leave-page .tl-action-btn:active:not(:disabled) {
+          transform: translate(1px, 1px);
+          box-shadow: 1px 1px 0 var(--tl-border);
+        }
+
+        .teacher-leave-page .tl-action-btn:focus-visible {
+          outline: 2px solid #292a27;
+          outline-offset: 3px;
+        }
+
+        .teacher-leave-page .tl-action-btn:disabled {
+          cursor: not-allowed;
+          opacity: 0.55;
+          box-shadow: none;
+        }
+
+        .teacher-leave-page .tl-approve-btn {
+          background: var(--tl-green);
+        }
+
+        .teacher-leave-page .tl-reject-btn {
+          background: var(--tl-pink);
+        }
+
+        .teacher-leave-page .tl-status-pill {
+          display: inline-flex;
+          width: fit-content;
+          align-items: center;
+          gap: 7px;
+          border: 1px solid var(--tl-border);
+          border-radius: 4px;
+          background: rgba(255, 255, 255, 0.55);
+          padding: 6px 9px;
+          color: var(--tl-ink);
+          font-size: 10px;
+          font-weight: 800;
+        }
+
+        .teacher-leave-page .tl-status-dot {
+          width: 7px;
+          height: 7px;
+          flex-shrink: 0;
+          border: 1px solid var(--tl-border);
+          border-radius: 50%;
+          background: #d9a934;
+        }
+
+        .teacher-leave-page .tl-feedback {
+          border: 1.5px solid var(--tl-border);
+          border-radius: 6px;
+          background: #ffffff;
+          padding: 13px 16px;
+          color: var(--tl-ink);
+          box-shadow: 2px 2px 0 var(--tl-border);
+        }
+
+        .teacher-leave-page .tl-feedback-success {
+          background: var(--tl-green);
+        }
+
+        .teacher-leave-page .tl-feedback-error {
+          background: var(--tl-peach);
+        }
+
+        .teacher-leave-page .tl-pending-count {
+          display: inline-flex;
+          width: fit-content;
+          align-items: center;
+          gap: 8px;
+          border: 1.5px solid var(--tl-border);
+          border-radius: 5px;
+          background: var(--tl-yellow);
+          padding: 7px 10px;
+          color: var(--tl-ink);
+          font-size: 11px;
+          font-weight: 800;
+        }
+
+        @media (min-width: 640px) {
+          .teacher-leave-page .tl-request-header {
+            flex-direction: row;
+            align-items: flex-start;
+            justify-content: space-between;
+          }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+          .teacher-leave-page .tl-card,
+          .teacher-leave-page .tl-request-card,
+          .teacher-leave-page .tl-action-btn {
+            transition: none;
+          }
+        }
+      `}</style>
+
+      <main className="teacher-leave-page mx-auto w-full max-w-7xl flex-1 px-4 py-6 sm:px-6 sm:py-8 lg:px-8">
         <PageHeader
           badge="Faculty Portal"
           title="Leave / OD Requests"
-          description="Process incoming student applications for official leave of absence and external on-duty attendance."
+          description="Review student applications for leave of absence and official on-duty attendance."
           backTo="/teacher"
         />
 
-        {/* FEEDBACK NOTIFICATION */}
+        {/* Feedback Notification */}
         {message && (
-          <div className="mb-6 p-4 rounded-xl bg-[#17130A] border border-[#3D3318] text-[#D4AF37] text-xs flex items-start gap-2.5">
-            <span className="w-1.5 h-1.5 rounded-full bg-[#D4AF37] mt-1 shrink-0" />
-            <span className="leading-relaxed">{message}</span>
+          <div
+            role="status"
+            aria-live="polite"
+            className={`tl-feedback mb-6 flex items-start gap-3 ${
+              isSuccess
+                ? "tl-feedback-success"
+                : "tl-feedback-error"
+            }`}
+          >
+            <span
+              className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full border border-[#292a27] bg-white/70 text-xs font-extrabold"
+              aria-hidden="true"
+            >
+              {isSuccess ? "✓" : "!"}
+            </span>
+
+            <p className="text-sm font-semibold leading-6">
+              {message}
+            </p>
           </div>
         )}
 
-        {/* METRICS ROW */}
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
-          
-          <div className="bg-[#0D0D0D] border border-[#292929] rounded-2xl p-5 flex items-center justify-between">
-            <div>
-              <p className="text-xs font-semibold text-[#888888] uppercase tracking-wider">
-                Pending Approval
-              </p>
-
-              <p className="text-2xl sm:text-3xl font-black text-[#D4AF37] mt-1">
-                {pending.length}
-              </p>
-            </div>
-
-            <div className="w-10 h-10 rounded-xl bg-[#17130A] border border-[#3D3318] flex items-center justify-center text-lg text-[#D4AF37]">
-              ⏳
-            </div>
-          </div>
-
-          <div className="bg-[#0D0D0D] border border-[#292929] rounded-2xl p-5 flex items-center justify-between">
-            <div>
-              <p className="text-xs font-semibold text-[#888888] uppercase tracking-wider">
-                Approved
-              </p>
-
-              <p className="text-2xl sm:text-3xl font-black text-[#4ADE80] mt-1">
-                {approved.length}
-              </p>
-            </div>
-
-            <div className="w-10 h-10 rounded-xl bg-[#0B1B10] border border-[#1B3B24] flex items-center justify-center text-lg text-[#4ADE80]">
-              ✓
-            </div>
-          </div>
-
-          <div className="bg-[#0D0D0D] border border-[#292929] rounded-2xl p-5 flex items-center justify-between">
-            <div>
-              <p className="text-xs font-semibold text-[#888888] uppercase tracking-wider">
-                Rejected
-              </p>
-
-              <p className="text-2xl sm:text-3xl font-black text-[#F87171] mt-1">
-                {rejected.length}
-              </p>
-            </div>
-
-            <div className="w-10 h-10 rounded-xl bg-[#1C0D0D] border border-[#3D1B1B] flex items-center justify-center text-lg text-[#F87171]">
-              ✕
-            </div>
-          </div>
-
-        </div>
-
-        {/* LOADING */}
-        {loading && (
-          <LoadingState message="Fetching student Leave/OD requests..." />
-        )}
-
-        {/* EMPTY STATE */}
-        {!loading && requests.length === 0 && (
-          <EmptyState
-            icon="📋"
-            title="No Pending Applications"
-            message="There are currently no Leave or OD requests awaiting your review."
-          />
-        )}
-
-        {/* REQUESTS LIST */}
-        {!loading && requests.length > 0 && (
-          <div className="space-y-4">
-            {requests.map((request) => (
+        {/* Metrics */}
+        <section
+          aria-label="Request statistics"
+          className="mb-8 grid grid-cols-1 gap-4 sm:grid-cols-3"
+        >
+          {metrics.map((metric) => (
+            <article
+              key={metric.label}
+              className="tl-card overflow-hidden"
+            >
               <div
-                key={request.id}
-                className="bg-[#0D0D0D] border border-[#292929] hover:border-[#383838] transition rounded-2xl p-6 shadow-sm"
+                className={`tl-metric-header tl-tone-${metric.tone}`}
               >
-                <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-6">
-                  
-                  {/* DETAILS */}
-                  <div className="flex-1 min-w-0">
-                    
-                    <div className="flex flex-wrap items-center gap-2 mb-2">
-                      <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded bg-[#17130A] border border-[#3D3318] text-[#D4AF37]">
-                        {request.request_type}
-                      </span>
+                <p className="tl-metric-label">
+                  {metric.label}
+                </p>
 
-                      <StatusBadge status={request.status} />
-                    </div>
-
-                    <h2 className="text-lg font-bold text-white tracking-tight">
-                      {request.student_name}
-                    </h2>
-
-                    {/* METADATA GRID */}
-                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 mt-3 text-xs">
-                      
-                      <div className="bg-[#080808] p-2.5 rounded-lg border border-[#1F1F1F]">
-                        <span className="text-[10px] text-[#888888] uppercase block">
-                          Register No
-                        </span>
-
-                        <span className="font-mono text-white truncate block">
-                          {request.student_user_id || "N/A"}
-                        </span>
-                      </div>
-
-                      <div className="bg-[#080808] p-2.5 rounded-lg border border-[#1F1F1F]">
-                        <span className="text-[10px] text-[#888888] uppercase block">
-                          Department
-                        </span>
-
-                        <span className="text-white truncate block">
-                          {request.department || "General"}
-                        </span>
-                      </div>
-
-                      <div className="bg-[#080808] p-2.5 rounded-lg border border-[#1F1F1F]">
-                        <span className="text-[10px] text-[#888888] uppercase block">
-                          From
-                        </span>
-
-                        <span className="text-[#CCCCCC] truncate block">
-                          {request.from_date}{" "}
-                          {request.from_time
-                            ? `(${request.from_time})`
-                            : ""}
-                        </span>
-                      </div>
-
-                      <div className="bg-[#080808] p-2.5 rounded-lg border border-[#1F1F1F]">
-                        <span className="text-[10px] text-[#888888] uppercase block">
-                          To
-                        </span>
-
-                        <span className="text-[#CCCCCC] truncate block">
-                          {request.to_date}{" "}
-                          {request.to_time
-                            ? `(${request.to_time})`
-                            : ""}
-                        </span>
-                      </div>
-
-                    </div>
-
-                    {/* REQUEST TYPE DETAILS */}
-                    {(request.leave_type ||
-                      request.od_type ||
-                      request.activity_name) && (
-                      <div className="mt-3 flex flex-wrap gap-2 text-xs">
-                        
-                        {request.leave_type && (
-                          <span className="px-2 py-0.5 rounded bg-[#141414] border border-[#222222] text-[#B8B8B8]">
-                            Type:{" "}
-                            <strong className="text-white">
-                              {request.leave_type}
-                            </strong>
-                          </span>
-                        )}
-
-                        {request.od_type && (
-                          <span className="px-2 py-0.5 rounded bg-[#141414] border border-[#222222] text-[#B8B8B8]">
-                            OD Category:{" "}
-                            <strong className="text-white">
-                              {request.od_type}
-                            </strong>
-                          </span>
-                        )}
-
-                        {request.activity_name && (
-                          <span className="px-2 py-0.5 rounded bg-[#141414] border border-[#222222] text-[#B8B8B8]">
-                            Activity:{" "}
-                            <strong className="text-white">
-                              {request.activity_name}
-                            </strong>
-                          </span>
-                        )}
-
-                      </div>
-                    )}
-
-                    {/* REASON */}
-                    <div className="mt-3.5 bg-[#080808] border border-[#222222] rounded-xl p-3.5">
-                      <p className="text-[10px] font-semibold text-[#777777] uppercase tracking-wider mb-1">
-                        Application Reason
-                      </p>
-
-                      <p className="text-xs text-[#CCCCCC] leading-relaxed whitespace-pre-wrap">
-                        {request.reason || "No reason provided."}
-                      </p>
-                    </div>
-
-                    <p className="text-[10px] text-[#666666] mt-2 font-mono">
-                      Submitted on:{" "}
-                      {request.created_at
-                        ? new Date(
-                            request.created_at
-                          ).toLocaleString()
-                        : "-"}
-                    </p>
-                  </div>
-
-                  {/* ACTION BUTTONS */}
-                  {request.status === "PENDING" && (
-                    <div className="shrink-0 flex sm:flex-row lg:flex-col gap-2.5 pt-2 lg:pt-0 w-full sm:w-auto lg:w-36">
-                      
-                      <button
-                        type="button"
-                        disabled={updating}
-                        onClick={() =>
-                          updateStatus(request.id, "APPROVED")
-                        }
-                        className="flex-1 lg:flex-none py-2.5 px-4 rounded-xl bg-[#D4AF37] hover:bg-[#E5C158] disabled:opacity-50 disabled:cursor-not-allowed text-[#050505] text-xs font-bold transition shadow-sm text-center"
-                      >
-                        ✓ Approve
-                      </button>
-
-                      <button
-                        type="button"
-                        disabled={updating}
-                        onClick={() =>
-                          updateStatus(request.id, "REJECTED")
-                        }
-                        className="flex-1 lg:flex-none py-2.5 px-4 rounded-xl bg-[#1C0D0D] border border-[#3D1B1B] hover:bg-[#2B1313] hover:border-[#5A2525] disabled:opacity-50 disabled:cursor-not-allowed text-[#F87171] text-xs font-semibold transition text-center"
-                      >
-                        ✕ Reject
-                      </button>
-
-                    </div>
-                  )}
-
-                </div>
+                <span className="tl-metric-icon" aria-hidden="true">
+                  {metric.icon}
+                </span>
               </div>
-            ))}
-          </div>
-        )}
 
+              <div className="tl-metric-body">
+                <p className="tl-metric-count">
+                  {metric.count}
+                </p>
+                <p className="mt-1 text-xs font-medium text-[#595b53]">
+                  {metric.label === "Pending Approval"
+                    ? "Awaiting review"
+                    : metric.label === "Approved"
+                    ? "Approved applications"
+                    : "Rejected applications"}
+                </p>
+              </div>
+            </article>
+          ))}
+        </section>
+
+        {/* Student Applications */}
+        <section className="tl-card mb-2 overflow-hidden">
+          <div className="tl-section-header tl-tone-yellow">
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+              <div>
+                <h2 className="text-lg font-extrabold tracking-tight text-[#292a27]">
+                  Student Applications
+                </h2>
+
+                <p className="mt-1 text-sm leading-6 text-[#454640]">
+                  Review application details and update pending requests.
+                </p>
+              </div>
+
+              <span className="tl-pending-count">
+                <span
+                  className="tl-status-dot"
+                  aria-hidden="true"
+                />
+                {pending.length} Pending
+              </span>
+            </div>
+          </div>
+
+          <div className="p-4 sm:p-6">
+            {/* Loading */}
+            {loading && (
+              <LoadingState message="Fetching student Leave/OD requests..." />
+            )}
+
+            {/* Empty State */}
+            {!loading && requests.length === 0 && (
+              <EmptyState
+                icon="📋"
+                title="No Applications Found"
+                message="There are currently no Leave or OD requests awaiting your review."
+              />
+            )}
+
+            {/* Request Cards */}
+            {!loading && requests.length > 0 && (
+              <div className="space-y-5">
+                {requests.map((request, index) => {
+                  const tone = tones[index % tones.length];
+
+                  return (
+                    <article
+                      key={request.id}
+                      className="tl-request-card"
+                    >
+                      {/* Pastel Student Header */}
+                      <div
+                        className={`tl-request-header tl-tone-${tone}`}
+                      >
+                        <div className="min-w-0 flex-1">
+                          <div className="mb-3 flex flex-wrap items-center gap-2">
+                            <span className="rounded border border-[#292a27] bg-white/60 px-2.5 py-1 text-[10px] font-extrabold uppercase tracking-wide text-[#292a27]">
+                              {request.request_type}
+                            </span>
+
+                            <StatusBadge status={request.status} />
+                          </div>
+
+                          <h3 className="break-words text-lg font-extrabold text-[#292a27]">
+                            {request.student_name}
+                          </h3>
+
+                          <p className="mt-1 text-xs font-medium text-[#454640]">
+                            Register No:{" "}
+                            <span className="font-bold text-[#292a27]">
+                              {request.student_user_id || "N/A"}
+                            </span>
+                          </p>
+                        </div>
+
+                        {request.status === "PENDING" && (
+                          <span className="tl-status-pill">
+                            <span
+                              className="tl-status-dot"
+                              aria-hidden="true"
+                            />
+                            Action Required
+                          </span>
+                        )}
+                      </div>
+
+                      {/* White Request Body */}
+                      <div className="p-4 sm:p-5">
+                        {/* Request Details */}
+                        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
+                          <div className="tl-detail-box">
+                            <p className="tl-detail-label">
+                              Department
+                            </p>
+
+                            <p className="tl-detail-value mt-2">
+                              {request.department || "General"}
+                            </p>
+                          </div>
+
+                          <div className="tl-detail-box">
+                            <p className="tl-detail-label">
+                              From
+                            </p>
+
+                            <p className="tl-detail-value mt-2">
+                              {formatDate(request.from_date)}
+                            </p>
+
+                            {request.from_time && (
+                              <p className="mt-1 text-xs font-medium text-[#595b53]">
+                                {formatTime(request.from_time)}
+                              </p>
+                            )}
+                          </div>
+
+                          <div className="tl-detail-box">
+                            <p className="tl-detail-label">
+                              To
+                            </p>
+
+                            <p className="tl-detail-value mt-2">
+                              {formatDate(request.to_date)}
+                            </p>
+
+                            {request.to_time && (
+                              <p className="mt-1 text-xs font-medium text-[#595b53]">
+                                {formatTime(request.to_time)}
+                              </p>
+                            )}
+                          </div>
+
+                          <div className="tl-detail-box">
+                            <p className="tl-detail-label">
+                              Submitted On
+                            </p>
+
+                            <p className="tl-detail-value mt-2">
+                              {formatSubmittedDate(request.created_at)}
+                            </p>
+
+                            {request.created_at && (
+                              <p className="mt-1 text-xs font-medium text-[#595b53]">
+                                {formatSubmittedTime(request.created_at)}
+                              </p>
+                            )}
+                          </div>
+                        </div>
+
+                        {/* Additional Details */}
+                        {(request.leave_type ||
+                          request.od_type ||
+                          request.activity_name) && (
+                          <div className="mt-5">
+                            <p className="mb-3 text-[10px] font-extrabold uppercase tracking-widest text-[#595b53]">
+                              Additional Details
+                            </p>
+
+                            <div className="flex flex-wrap gap-2">
+                              {request.leave_type && (
+                                <div className="rounded border border-[#d6d7cf] bg-[#fffefb] px-3 py-2.5 text-xs text-[#454640]">
+                                  <span className="font-medium">
+                                    Leave Type:{" "}
+                                  </span>
+                                  <strong className="font-extrabold text-[#292a27]">
+                                    {request.leave_type}
+                                  </strong>
+                                </div>
+                              )}
+
+                              {request.od_type && (
+                                <div className="rounded border border-[#d6d7cf] bg-[#fffefb] px-3 py-2.5 text-xs text-[#454640]">
+                                  <span className="font-medium">
+                                    OD Category:{" "}
+                                  </span>
+                                  <strong className="font-extrabold text-[#292a27]">
+                                    {request.od_type}
+                                  </strong>
+                                </div>
+                              )}
+
+                              {request.activity_name && (
+                                <div className="rounded border border-[#d6d7cf] bg-[#fffefb] px-3 py-2.5 text-xs text-[#454640]">
+                                  <span className="font-medium">
+                                    Activity:{" "}
+                                  </span>
+                                  <strong className="font-extrabold text-[#292a27]">
+                                    {request.activity_name}
+                                  </strong>
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        )}
+
+                        {/* Application Reason */}
+                        <div className="tl-reason-box mt-5">
+                          <p className="tl-reason-title">
+                            Application Reason
+                          </p>
+
+                          <p className="whitespace-pre-wrap break-words text-sm font-medium leading-6 text-[#454640]">
+                            {request.reason || "No reason provided."}
+                          </p>
+                        </div>
+
+                        {/* Actions */}
+                        {request.status === "PENDING" && (
+                          <div className="mt-5 flex flex-col gap-3 border-t border-[#d6d7cf] pt-5 sm:flex-row sm:justify-end">
+                            <button
+                              type="button"
+                              disabled={updating}
+                              onClick={() =>
+                                updateStatus(request.id, "APPROVED")
+                              }
+                              className="tl-action-btn tl-approve-btn sm:min-w-36"
+                            >
+                              ✓ Approve
+                            </button>
+
+                            <button
+                              type="button"
+                              disabled={updating}
+                              onClick={() =>
+                                updateStatus(request.id, "REJECTED")
+                              }
+                              className="tl-action-btn tl-reject-btn sm:min-w-36"
+                            >
+                              ✕ Reject
+                            </button>
+                          </div>
+                        )}
+                      </div>
+                    </article>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        </section>
       </main>
 
       <Footer />

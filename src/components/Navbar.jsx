@@ -8,6 +8,7 @@ export default function Navbar({ role = "student" }) {
 
   // Retrieve user data safely
   let user = null;
+
   try {
     const raw = localStorage.getItem("user");
     if (raw) user = JSON.parse(raw);
@@ -48,53 +49,81 @@ export default function Navbar({ role = "student" }) {
     if (path === "/student" || path === "/teacher") {
       return location.pathname === path;
     }
-    return location.pathname === path || location.pathname.startsWith(path + "/");
+
+    return (
+      location.pathname === path ||
+      location.pathname.startsWith(path + "/")
+    );
   };
 
-  const userName = user?.name || user?.username || (role === "teacher" ? "Faculty" : "Student");
-  const userIdentifier = user?.userId || user?.studentId || user?.teacherId || "";
+  const userName =
+    user?.name ||
+    user?.username ||
+    (role === "teacher" ? "Faculty" : "Student");
+
+  const userIdentifier =
+    user?.userId || user?.studentId || user?.teacherId || "";
+
   const avatarLetter = (userName || "U").charAt(0).toUpperCase();
 
+  const roleLabel = role === "teacher" ? "Faculty" : "Student";
+
+  const closeMobileMenu = () => setMobileMenuOpen(false);
+
+  const handleMobileLogout = () => {
+    closeMobileMenu();
+    handleLogout();
+  };
+
   return (
-    <header className="sticky top-0 z-40 w-full bg-[#080808]/95 backdrop-blur border-b border-[#292929]">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between h-16 gap-4">
-          
+    <header className="sticky top-0 z-40 w-full border-b border-gray-200 bg-white/95 backdrop-blur-md">
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+        <div className="flex min-h-16 items-center justify-between gap-3 py-2">
           {/* BRAND */}
           <Link
             to={role === "teacher" ? "/teacher" : "/student"}
-            className="flex items-center gap-3 shrink-0 group"
+            onClick={closeMobileMenu}
+            className="group flex min-w-0 shrink-0 items-center gap-2.5 sm:gap-3"
+            aria-label="Campus Connect home"
           >
-            <div className="w-9 h-9 rounded-xl bg-[#D4AF37] flex items-center justify-center font-bold text-[#050505] text-sm shadow-md group-hover:bg-[#E5C158] transition-colors">
+            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-[#E9D99F] bg-[#FBF7E9] text-sm font-bold text-[#80651E] transition-colors group-hover:bg-[#F5ECCB]">
               CW
             </div>
-            <div>
-              <div className="flex items-center gap-2">
-                <span className="text-base font-bold text-white tracking-tight leading-none group-hover:text-[#D4AF37] transition-colors">
+
+            <div className="min-w-0">
+              <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
+                <span className="text-sm font-bold tracking-tight text-gray-800 transition-colors group-hover:text-[#9A7926] sm:text-base">
                   Campus Connect
                 </span>
-                <span className="text-[10px] uppercase tracking-wider font-semibold px-1.5 py-0.5 rounded bg-[#1A160A] border border-[#3D3318] text-[#D4AF37]">
-                  {role === "teacher" ? "Faculty" : "Student"}
+
+                <span className="rounded-md border border-[#EDE2BD] bg-[#FBF7E9] px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-wide text-[#80651E]">
+                  {roleLabel}
                 </span>
               </div>
-              <p className="text-[11px] text-[#888888] leading-none mt-1">
+
+              <p className="mt-0.5 hidden text-[10px] leading-4 text-gray-500 sm:block sm:text-[11px]">
                 College Workflow System
               </p>
             </div>
           </Link>
 
           {/* DESKTOP NAV LINKS */}
-          <nav className="hidden lg:flex items-center gap-1 overflow-x-auto py-1">
+          <nav
+            aria-label="Main navigation"
+            className="hidden items-center gap-0.5 overflow-x-auto py-1 lg:flex"
+          >
             {links.map((item) => {
               const active = isLinkActive(item.path);
+
               return (
                 <Link
                   key={item.path}
                   to={item.path}
-                  className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all whitespace-nowrap border ${
+                  aria-current={active ? "page" : undefined}
+                  className={`whitespace-nowrap rounded-lg border px-2.5 py-2 text-[11px] font-medium transition-colors xl:px-3 xl:text-xs ${
                     active
-                      ? "bg-[#17130A] text-[#D4AF37] border-[#3D3318] shadow-sm font-semibold"
-                      : "text-[#888888] border-transparent hover:text-white hover:bg-[#121212]"
+                      ? "border-[#E9D99F] bg-[#FBF7E9] font-semibold text-[#80651E]"
+                      : "border-transparent text-gray-600 hover:border-gray-200 hover:bg-gray-50 hover:text-gray-900"
                   }`}
                 >
                   {item.label}
@@ -104,17 +133,19 @@ export default function Navbar({ role = "student" }) {
           </nav>
 
           {/* USER INFO + LOGOUT */}
-          <div className="hidden sm:flex items-center gap-3 shrink-0">
-            <div className="flex items-center gap-2.5 px-2.5 py-1 rounded-lg bg-[#0D0D0D] border border-[#292929]">
-              <div className="w-7 h-7 rounded-full bg-[#1A160A] border border-[#3D3318] text-[#D4AF37] text-xs font-bold flex items-center justify-center shrink-0">
+          <div className="hidden shrink-0 items-center gap-2 xl:flex">
+            <div className="flex max-w-[190px] items-center gap-2 rounded-xl border border-gray-200 bg-white px-2.5 py-1.5">
+              <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-[#E9D99F] bg-[#FBF7E9] text-xs font-bold text-[#80651E]">
                 {avatarLetter}
               </div>
-              <div className="text-left leading-tight pr-1">
-                <p className="text-xs font-medium text-white max-w-[120px] truncate">
+
+              <div className="min-w-0 pr-1 text-left leading-tight">
+                <p className="max-w-[125px] truncate text-xs font-semibold text-gray-800">
                   {userName}
                 </p>
+
                 {userIdentifier && (
-                  <p className="text-[10px] text-[#888888] truncate max-w-[120px]">
+                  <p className="mt-1 max-w-[125px] truncate text-[10px] text-gray-500">
                     {userIdentifier}
                   </p>
                 )}
@@ -122,71 +153,149 @@ export default function Navbar({ role = "student" }) {
             </div>
 
             <button
+              type="button"
               onClick={handleLogout}
-              className="text-xs text-[#888888] font-medium px-3 py-1.5 rounded-lg border border-[#292929] hover:text-[#D4AF37] hover:border-[#D4AF37] bg-[#0D0D0D] transition-colors"
+              className="inline-flex min-h-9 items-center justify-center rounded-lg border border-gray-200 bg-white px-3 text-xs font-semibold text-gray-600 transition-colors hover:border-[#E9D99F] hover:bg-[#FBF7E9] hover:text-[#80651E] focus:outline-none focus:ring-2 focus:ring-[#D8B65C]/30"
             >
               Logout
             </button>
           </div>
 
-          {/* MOBILE MENU TOGGLE */}
-          <div className="flex items-center gap-2 lg:hidden">
+          {/* TABLET + MOBILE ACTIONS */}
+          <div className="flex shrink-0 items-center gap-2 lg:hidden">
             <button
-              onClick={handleLogout}
-              className="sm:hidden text-xs text-[#888888] px-2.5 py-1 rounded-lg border border-[#292929] hover:text-[#D4AF37] bg-[#0D0D0D]"
+              type="button"
+              onClick={handleMobileLogout}
+              className="inline-flex min-h-9 items-center justify-center rounded-lg border border-gray-200 bg-white px-2.5 text-[11px] font-semibold text-gray-600 transition-colors hover:border-[#E9D99F] hover:bg-[#FBF7E9] hover:text-[#80651E] focus:outline-none focus:ring-2 focus:ring-[#D8B65C]/30 sm:px-3 sm:text-xs"
             >
               Logout
             </button>
 
             <button
-              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              aria-label="Toggle navigation menu"
-              className="p-2 rounded-lg text-[#888888] hover:text-white hover:bg-[#121212] border border-[#292929]"
+              type="button"
+              onClick={() => setMobileMenuOpen((open) => !open)}
+              aria-label={
+                mobileMenuOpen ? "Close navigation menu" : "Open navigation menu"
+              }
+              aria-expanded={mobileMenuOpen}
+              aria-controls="mobile-navigation"
+              className="flex h-9 w-9 items-center justify-center rounded-lg border border-gray-200 bg-white text-gray-600 transition-colors hover:border-[#E9D99F] hover:bg-[#FBF7E9] hover:text-[#80651E] focus:outline-none focus:ring-2 focus:ring-[#D8B65C]/30"
             >
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                {mobileMenuOpen ? (
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                ) : (
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-                )}
-              </svg>
+              {mobileMenuOpen ? (
+                <svg
+                  className="h-5 w-5"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                  aria-hidden="true"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={1.8}
+                    d="M6 18L18 6M6 6l12 12"
+                  />
+                </svg>
+              ) : (
+                <svg
+                  className="h-5 w-5"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                  aria-hidden="true"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={1.8}
+                    d="M4 6h16M4 12h16M4 18h16"
+                  />
+                </svg>
+              )}
             </button>
           </div>
-
         </div>
+
+        {/* TABLET NAVIGATION */}
+        <nav
+          aria-label="Main navigation"
+          className="hidden gap-1 overflow-x-auto border-t border-gray-100 py-2 lg:hidden sm:flex"
+        >
+          {links.map((item) => {
+            const active = isLinkActive(item.path);
+
+            return (
+              <Link
+                key={item.path}
+                to={item.path}
+                aria-current={active ? "page" : undefined}
+                className={`shrink-0 whitespace-nowrap rounded-lg border px-3 py-2 text-xs font-medium transition-colors ${
+                  active
+                    ? "border-[#E9D99F] bg-[#FBF7E9] font-semibold text-[#80651E]"
+                    : "border-transparent text-gray-600 hover:bg-gray-50 hover:text-gray-900"
+                }`}
+              >
+                {item.label}
+              </Link>
+            );
+          })}
+        </nav>
 
         {/* MOBILE COLLAPSIBLE MENU */}
         {mobileMenuOpen && (
-          <div className="lg:hidden border-t border-[#292929] py-3 space-y-1">
-            <div className="px-3 py-2 mb-2 rounded-lg bg-[#0D0D0D] border border-[#292929] flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <div className="w-6 h-6 rounded-full bg-[#1A160A] text-[#D4AF37] text-xs font-bold flex items-center justify-center">
+          <div
+            id="mobile-navigation"
+            className="border-t border-gray-100 py-3 sm:hidden"
+          >
+            {/* User information */}
+            <div className="mb-3 flex items-center justify-between gap-3 rounded-xl border border-gray-200 bg-gray-50 p-3">
+              <div className="flex min-w-0 items-center gap-2.5">
+                <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-[#E9D99F] bg-[#FBF7E9] text-xs font-bold text-[#80651E]">
                   {avatarLetter}
                 </div>
-                <span className="text-xs font-medium text-white">{userName}</span>
+
+                <div className="min-w-0">
+                  <p className="truncate text-xs font-semibold text-gray-800">
+                    {userName}
+                  </p>
+
+                  {userIdentifier && (
+                    <p className="mt-0.5 truncate text-[10px] text-gray-500">
+                      {userIdentifier}
+                    </p>
+                  )}
+                </div>
               </div>
-              <span className="text-[10px] text-[#888888]">{userIdentifier}</span>
+
+              <span className="shrink-0 rounded-md border border-[#EDE2BD] bg-[#FBF7E9] px-2 py-1 text-[9px] font-semibold uppercase tracking-wide text-[#80651E]">
+                {roleLabel}
+              </span>
             </div>
 
-            <div className="grid grid-cols-2 gap-1.5">
-              {links.map((item) => {
-                const active = isLinkActive(item.path);
-                return (
-                  <Link
-                    key={item.path}
-                    to={item.path}
-                    onClick={() => setMobileMenuOpen(false)}
-                    className={`px-3 py-2 rounded-lg text-xs font-medium transition border text-center ${
-                      active
-                        ? "bg-[#17130A] text-[#D4AF37] border-[#3D3318] font-semibold"
-                        : "text-[#888888] border-[#1F1F1F] bg-[#0D0D0D] hover:text-white"
-                    }`}
-                  >
-                    {item.label}
-                  </Link>
-                );
-              })}
-            </div>
+            {/* Navigation links */}
+            <nav aria-label="Mobile navigation">
+              <div className="grid grid-cols-2 gap-2">
+                {links.map((item) => {
+                  const active = isLinkActive(item.path);
+
+                  return (
+                    <Link
+                      key={item.path}
+                      to={item.path}
+                      onClick={closeMobileMenu}
+                      aria-current={active ? "page" : undefined}
+                      className={`flex min-h-10 items-center justify-center rounded-lg border px-3 py-2 text-center text-xs font-medium transition-colors ${
+                        active
+                          ? "border-[#E9D99F] bg-[#FBF7E9] font-semibold text-[#80651E]"
+                          : "border-gray-200 bg-white text-gray-600 hover:border-[#E9D99F] hover:bg-[#FBF7E9] hover:text-[#80651E]"
+                      }`}
+                    >
+                      {item.label}
+                    </Link>
+                  );
+                })}
+              </div>
+            </nav>
           </div>
         )}
       </div>

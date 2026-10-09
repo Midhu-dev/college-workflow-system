@@ -1,10 +1,21 @@
-export default function LoadingState({ message = "Loading details...", className = "" }) {
+export default function LoadingState({
+  message = "Loading details...",
+  className = "",
+}) {
   return (
     <div
-      className={`bg-[#0D0D0D] border border-[#292929] rounded-2xl p-12 text-center my-6 flex flex-col items-center justify-center ${className}`}
+      role="status"
+      aria-live="polite"
+      className={`my-6 flex flex-col items-center justify-center rounded-2xl border border-gray-200 bg-white px-6 py-12 text-center shadow-sm sm:py-14 ${className}`}
     >
-      <div className="w-8 h-8 rounded-full border-2 border-[#292929] border-t-[#D4AF37] animate-spin mb-4" />
-      <p className="text-xs font-medium text-[#888888] tracking-wide">
+      {/* Loading Spinner */}
+      <div
+        className="mb-4 h-9 w-9 rounded-full border-[3px] border-[#F0E8D0] border-t-[#C7A647] motion-safe:animate-spin motion-reduce:animate-none"
+        aria-hidden="true"
+      />
+
+      {/* Loading Message */}
+      <p className="text-xs font-medium tracking-wide text-gray-500 sm:text-sm">
         {message}
       </p>
     </div>
