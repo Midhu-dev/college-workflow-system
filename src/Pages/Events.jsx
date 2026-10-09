@@ -61,25 +61,36 @@ function Events() {
             Authorization: `Bearer ${token}`,
           },
         });
+
         if (res.ok) {
           const data = await res.json();
+
           if (data?.events && data.events.length > 0) {
-            // Map backend events and combine
-            const mapped = data.events.map((e) => ({
-              id: e.id,
-              title: e.title,
+            const mapped = data.events.map((event) => ({
+              id: event.id,
+              title: event.title,
               type: "Campus Event",
-              date: e.event_date ? new Date(e.event_date).toLocaleDateString() : "TBA",
-              time: e.event_time ? String(e.event_time).slice(0, 5) : "TBA",
-              venue: e.location || "Campus Venue",
-              description: e.description,
-              poster: e.poster_url || defaultEvents[0].poster,
+              date: event.event_date
+                ? new Date(event.event_date).toLocaleDateString()
+                : "TBA",
+              time: event.event_time
+                ? String(event.event_time).slice(0, 5)
+                : "TBA",
+              venue: event.location || "Campus Venue",
+              description: event.description,
+              poster: event.poster_url
+              ? event.poster_url.startsWith("http")
+                ? event.poster_url
+                : `http://localhost:5000${event.poster_url}`
+              : defaultEvents[0].poster
             }));
+
             setEventsList([...mapped, ...defaultEvents]);
           }
         }
-      } catch {
-        // Fall back to default events
+      } catch (error) {
+        console.error("Failed to fetch events:", error);
+        // Keep default events if the API request fails.
       }
     };
 
@@ -87,15 +98,16 @@ function Events() {
   }, []);
 
   const handleRegister = (eventId) => {
-    if (!registeredEvents.includes(eventId)) {
-      setRegisteredEvents([...registeredEvents, eventId]);
-    }
+    setRegisteredEvents((previous) =>
+      previous.includes(eventId)
+        ? previous
+        : [...previous, eventId]
+    );
   };
 
   return (
     <Sidebar role="student">
       <main className="max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-8 sm:py-10 flex-1">
-        
         <PageHeader
           badge="Campus Life"
           title="College Events"
@@ -107,7 +119,7 @@ function Events() {
           </span>
         </PageHeader>
 
-        {/* ================= EVENTS GRID ================= */}
+        {/* EVENTS GRID */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {eventsList.map((event) => {
             const isRegistered = registeredEvents.includes(event.id);
@@ -118,7 +130,7 @@ function Events() {
                 className="group bg-[#0D0D0D] rounded-2xl border border-[#292929] hover:border-[#D4AF37]/60 transition-all duration-200 overflow-hidden flex flex-col justify-between shadow-lg"
               >
                 <div>
-                  {/* POSTER HERO */}
+                  {/* POSTER */}
                   <div className="h-48 bg-[#111111] overflow-hidden relative">
                     <img
                       src={event.poster}
@@ -135,7 +147,7 @@ function Events() {
                     </div>
                   </div>
 
-                  {/* DETAILS */}
+                  {/* EVENT DETAILS */}
                   <div className="p-6">
                     <h3 className="text-lg font-bold text-white group-hover:text-[#D4AF37] transition-colors tracking-tight">
                       {event.title}
@@ -143,18 +155,30 @@ function Events() {
 
                     <div className="space-y-2 mt-4 text-xs text-[#888888]">
                       <div className="flex items-center gap-2.5">
-                        <span className="w-5 text-center text-[#D4AF37]">📅</span>
-                        <span className="text-[#B8B8B8] font-medium">{event.date}</span>
+                        <span className="w-5 text-center text-[#D4AF37]">
+                          📅
+                        </span>
+                        <span className="text-[#B8B8B8] font-medium">
+                          {event.date}
+                        </span>
                       </div>
 
                       <div className="flex items-center gap-2.5">
-                        <span className="w-5 text-center text-[#D4AF37]">⏰</span>
-                        <span className="text-[#B8B8B8] font-medium">{event.time}</span>
+                        <span className="w-5 text-center text-[#D4AF37]">
+                          ⏰
+                        </span>
+                        <span className="text-[#B8B8B8] font-medium">
+                          {event.time}
+                        </span>
                       </div>
 
                       <div className="flex items-center gap-2.5">
-                        <span className="w-5 text-center text-[#D4AF37]">📍</span>
-                        <span className="text-[#B8B8B8] font-medium">{event.venue}</span>
+                        <span className="w-5 text-center text-[#D4AF37]">
+                          📍
+                        </span>
+                        <span className="text-[#B8B8B8] font-medium">
+                          {event.venue}
+                        </span>
                       </div>
                     </div>
 
@@ -167,6 +191,7 @@ function Events() {
                 {/* REGISTER ACTION */}
                 <div className="p-6 pt-0">
                   <button
+                    type="button"
                     onClick={() => handleRegister(event.id)}
                     disabled={isRegistered}
                     className={`w-full py-2.5 rounded-xl text-xs font-bold transition-all shadow-sm flex items-center justify-center gap-1.5 ${
@@ -182,7 +207,6 @@ function Events() {
             );
           })}
         </div>
-
       </main>
 
       <Footer />

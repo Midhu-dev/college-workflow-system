@@ -1,5 +1,6 @@
 const express = require("express");
 const cors = require("cors");
+const path = require("path");
 require("dotenv").config();
 
 const db = require("./db");
@@ -15,21 +16,34 @@ const authenticateToken = require("./middleware/authMiddleware");
 
 const app = express();
 
+// =====================================================
+// MIDDLEWARE
+// =====================================================
+
 app.use(cors());
 app.use(express.json());
 
-/*
-  Basic API test
-*/
+// Serve uploaded files from the backend/uploads directory.
+// Example: http://localhost:5000/uploads/event-123.png
+app.use(
+  "/uploads",
+  express.static(path.join(__dirname, "uploads"))
+);
+
+// =====================================================
+// BASIC API TEST
+// =====================================================
+
 app.get("/", (req, res) => {
   res.json({
     message: "College Workflow API is running",
   });
 });
 
-/*
-  Database connection test
-*/
+// =====================================================
+// DATABASE CONNECTION TEST
+// =====================================================
+
 app.get("/api/test-db", async (req, res) => {
   try {
     const [rows] = await db.query("SELECT 1 AS result");
@@ -47,45 +61,52 @@ app.get("/api/test-db", async (req, res) => {
   }
 });
 
-/*
-  Authentication routes
-*/
+// =====================================================
+// AUTHENTICATION ROUTES
+// =====================================================
+
 app.use("/api/auth", authRoutes);
 
-/*
-  Leave / OD routes
-*/
+// =====================================================
+// LEAVE / OD ROUTES
+// =====================================================
+
 app.use("/api/leave-od", leaveOdRoutes);
 
-/*
-  Class Issue routes
-*/
+// =====================================================
+// CLASS ISSUE ROUTES
+// =====================================================
+
 app.use("/api/class-issues", classIssueRoutes);
 
-/*
-  Certificate Upload routes
-*/
+// =====================================================
+// CERTIFICATE UPLOAD ROUTES
+// =====================================================
+
 app.use(
   "/api/certificate-uploads",
   certificateUploadRoutes
 );
 
-/*
-  Certificate Request routes
-*/
+// =====================================================
+// CERTIFICATE REQUEST ROUTES
+// =====================================================
+
 app.use(
   "/api/certificate-requests",
   certificateRequestRoutes
 );
 
-/*
-  Event routes
-*/
+// =====================================================
+// EVENT ROUTES
+// =====================================================
+
 app.use("/api/events", eventRoutes);
 
-/*
-  Protected authentication test
-*/
+// =====================================================
+// PROTECTED AUTHENTICATION TEST
+// =====================================================
+
 app.get("/api/test-auth", authenticateToken, (req, res) => {
   res.json({
     message: "Authentication successful",
@@ -93,8 +114,29 @@ app.get("/api/test-auth", authenticateToken, (req, res) => {
   });
 });
 
+// =====================================================
+// GLOBAL ERROR HANDLER
+// =====================================================
+
+app.use((error, req, res, next) => {
+  console.error("Unhandled server error:", error);
+
+  if (res.headersSent) {
+    return next(error);
+  }
+
+  res.status(500).json({
+    message: "Internal server error",
+  });
+});
+
+// =====================================================
+// START SERVER
+// =====================================================
+
 const PORT = process.env.PORT || 5000;
 
 app.listen(PORT, () => {
   console.log(`Server running on http://localhost:${PORT}`);
+  console.log(`Uploaded files served from /uploads`);
 });
