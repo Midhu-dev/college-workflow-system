@@ -29,7 +29,7 @@ function App() {
 
   return (
     <BrowserRouter>
-      <div className="min-h-screen bg-[#050505] text-white antialiased flex flex-col">
+      <div className="premium-theme min-h-screen antialiased flex flex-col">
         <Routes>
 
           {/* ================= LOGIN ================= */}
